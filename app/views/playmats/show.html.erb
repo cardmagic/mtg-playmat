@@ -1,0 +1,51 @@
+<main class="layout">
+  <header class="topbar panel">
+    <p class="eyebrow">Gaming Table Simulator</p>
+    <h1>MTG Playmat</h1>
+    <p>Fast two-player shared table with Archidekt decks, live sync, and manual card control.</p>
+  </header>
+
+  <% if @room_reference %>
+    <%= solid_object @room_reference, authorization_context: @authorization do |room| %>
+      <%= render "actors/playmat_room/table",
+        actor: room,
+        authorization_context: @authorization,
+        initial_room: @room %>
+    <% end %>
+  <% else %>
+    <section class="panel lobby-panel">
+      <h2>Start or Join</h2>
+      <div class="lobby-grid">
+        <% unless params[:join].present? %>
+          <%= form_with url: api_spaces_path, class: "stacked-form", data: { turbo: false } do |form| %>
+            <h3>Create a New Table</h3>
+            <%= form.label :playerName, "Your name" %>
+            <%= form.text_field :playerName, maxlength: 28, required: true, autocomplete: "name" %>
+            <%= form.label :spaceName, "Space name" %>
+            <%= form.text_field :spaceName, maxlength: 40, value: "Gaming Table" %>
+            <%= form.submit "Create space" %>
+          <% end %>
+        <% end %>
+
+        <%= form_with url: api_space_join_path, class: "stacked-form", data: { turbo: false } do |form| %>
+          <h3>Join an Existing Table</h3>
+          <%= form.label :playerName, "Your name" %>
+          <%= form.text_field :playerName, maxlength: 28, required: true, autocomplete: "name" %>
+          <%= form.label :spaceCode, "Space code" %>
+          <%= form.text_field :spaceCode,
+            maxlength: 6,
+            value: params[:join],
+            placeholder: "ABC123",
+            required: true,
+            autocapitalize: "characters" %>
+          <%= form.submit "Join space" %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</main>
+
+<aside id="card-hover-preview" class="card-hover-preview" aria-hidden="true">
+  <img id="card-hover-preview-image" alt="Card preview" />
+  <p id="card-hover-preview-name"></p>
+</aside>

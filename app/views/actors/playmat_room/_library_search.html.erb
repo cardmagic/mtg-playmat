@@ -1,0 +1,44 @@
+<% library_search = actor.public_send(player_observable) %>
+
+<% if library_search &&
+    library_search.fetch("session_id") == authorization_context.session_id &&
+    library_search.fetch("is_searching_deck") %>
+  <% action_path = playmat_action_path(actor.actor_id) %>
+
+  <div class="modal-overlay" aria-hidden="false">
+    <section class="modal-card library-search-modal-card" role="dialog" aria-modal="true" aria-labelledby="library-search-title">
+      <h3 id="library-search-title">Search Library</h3>
+      <p>Choose a card to move it from your library to your hand.</p>
+      <input type="search" placeholder="Filter card names" data-library-filter />
+      <div class="library-search-list">
+        <% library_search.fetch("library").each do |card| %>
+          <%= button_to action_path,
+            id: "library_search_card_#{card.fetch("instance_id")}",
+            params: {
+              action: {
+                type: "move_library_card_to_hand",
+                instanceId: card.fetch("instance_id")
+              }
+            },
+            form: {
+              class: "contents-action",
+              data: { library_card_name: card.fetch("name").downcase }
+            },
+            class: "library-search-item",
+            data: {
+              preview_image: card.fetch("image_url"),
+              preview_name: card.fetch("name")
+            } do %>
+            <img loading="lazy" src="<%= card.fetch("image_url") %>" alt="<%= card.fetch("name") %>" />
+            <span><%= card.fetch("name") %></span>
+          <% end %>
+        <% end %>
+      </div>
+      <%= button_to "Close",
+        action_path,
+        params: { action: { type: "close_library_search" } },
+        form: { class: "inline-action" },
+        class: "modal-cancel-button" %>
+    </section>
+  </div>
+<% end %>

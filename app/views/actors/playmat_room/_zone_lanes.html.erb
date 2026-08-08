@@ -1,0 +1,57 @@
+<div class="zone-lanes">
+  <% %w[graveyard exile].each do |zone| %>
+    <div class="zone-lane">
+      <span class="zone-lane-label">
+        <%= is_current_player ? "#{zone.titleize} (click to move to battlefield)" : zone.titleize %>
+      </span>
+      <div class="zone-lane-cards">
+        <% player.fetch(zone).reverse_each.with_index do |card, index| %>
+          <% card_classes = class_names(
+            "zone-card-chip",
+            "read-only": !is_current_player,
+            "top-zone-card": zone == "graveyard" && index.zero?
+          ) %>
+          <% if is_current_player %>
+            <%= button_to action_path,
+              id: "#{zone}_card_#{card.fetch("instance_id")}",
+              params: {
+                action: {
+                  type: "move_card_zone",
+                  instanceId: card.fetch("instance_id"),
+                  from: zone,
+                  to: "battlefield",
+                  x: 48,
+                  y: 48
+                }
+              },
+              form: { class: "contents-action" },
+              class: card_classes,
+              data: {
+                preview_image: card.fetch("image_url"),
+                preview_name: card.fetch("name")
+              } do %>
+              <img loading="lazy" src="<%= card.fetch("image_url") %>" alt="<%= card.fetch("name") %>" />
+              <% if zone == "graveyard" && index.zero? %>
+                <em class="zone-top-badge">TOP</em>
+              <% end %>
+              <span><%= card.fetch("name") %></span>
+            <% end %>
+          <% else %>
+            <div
+              id="<%= zone %>_card_<%= card.fetch("instance_id") %>"
+              class="<%= card_classes %>"
+              data-preview-image="<%= card.fetch("image_url") %>"
+              data-preview-name="<%= card.fetch("name") %>"
+            >
+              <img loading="lazy" src="<%= card.fetch("image_url") %>" alt="<%= card.fetch("name") %>" />
+              <% if zone == "graveyard" && index.zero? %>
+                <em class="zone-top-badge">TOP</em>
+              <% end %>
+              <span><%= card.fetch("name") %></span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

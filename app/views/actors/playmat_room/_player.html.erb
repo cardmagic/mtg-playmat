@@ -1,0 +1,80 @@
+<% player = actor.public_send(player_observable) %>
+
+<% if player %>
+  <%
+    is_current_player = player.fetch("session_id") == authorization_context.session_id
+    action_path = playmat_action_path(actor.actor_id)
+  %>
+
+  <section
+    id="player_<%= player.fetch("id") %>"
+    class="<%= class_names("player-section", "your-seat": is_current_player, "opponent-seat": !is_current_player) %>"
+    data-player-id="<%= player.fetch("id") %>"
+    data-current-player="<%= is_current_player %>"
+  >
+    <header class="player-header">
+      <div class="player-header-name">
+        <strong><%= player.fetch("name") %></strong>
+        <% if !is_current_player && player.fetch("is_searching_deck") %>
+          <span class="searching-indicator">Looking through library...</span>
+        <% end %>
+      </div>
+
+      <div class="life-controls">
+        <% if is_current_player %>
+          <%= button_to "-",
+            action_path,
+            params: { action: { type: "adjust_life", delta: -1 } },
+            form: { class: "inline-action" } %>
+        <% end %>
+        <span class="life-value"><%= player.fetch("life") %></span>
+        <% if is_current_player %>
+          <%= button_to "+",
+            action_path,
+            params: { action: { type: "adjust_life", delta: 1 } },
+            form: { class: "inline-action" } %>
+          <%= button_to "Reset",
+            action_path,
+            params: { action: { type: "reset_life" } },
+            form: { class: "inline-action" } %>
+        <% end %>
+      </div>
+    </header>
+
+    <div class="zone-summary">
+      <span>Selected: <%= player.fetch("deck_name") || "not loaded" %></span>
+      <span>Library <%= player.fetch("library").length %></span>
+      <span>Hand <%= player.fetch("hand").length %></span>
+      <span>Graveyard <%= player.fetch("graveyard").length %></span>
+      <span>Exile <%= player.fetch("exile").length %></span>
+    </div>
+
+    <% if is_current_player %>
+      <div class="hand-strip">
+        <% player.fetch("hand").reverse_each do |card| %>
+          <%= button_to action_path,
+            id: "hand_card_#{card.fetch("instance_id")}",
+            params: { action: { type: "play_from_hand", instanceId: card.fetch("instance_id") } },
+            form: { class: "contents-action" },
+            class: "hand-card",
+            data: {
+              preview_image: card.fetch("image_url"),
+              preview_name: card.fetch("name")
+            } do %>
+            <img loading="lazy" src="<%= card.fetch("image_url") %>" alt="<%= card.fetch("name") %>" />
+            <span><%= card.fetch("name") %></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= render "actors/playmat_room/battlefield",
+      player:,
+      is_current_player:,
+      action_path: %>
+    <%= render "actors/playmat_room/zone_lanes",
+      player:,
+      is_current_player:,
+      action_path: %>
+  </section>
+<% end %>

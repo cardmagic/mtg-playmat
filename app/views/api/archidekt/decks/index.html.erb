@@ -1,0 +1,44 @@
+<%= turbo_frame_tag "deck-search-results" do %>
+  <% if @decks.empty? %>
+    <p class="hint">No matches found</p>
+  <% else %>
+    <% @decks.each do |deck| %>
+      <% color_bands = deck.fetch(:colorBands) %>
+      <% total_weight = color_bands.sum { |band| band.fetch(:weight) } %>
+      <div class="deck-result-item">
+        <% if deck.fetch(:featuredUrl) %>
+          <%= image_tag deck.fetch(:featuredUrl),
+            class: "deck-result-cover",
+            loading: "lazy",
+            alt: deck.fetch(:name) %>
+        <% else %>
+          <div class="deck-result-cover"></div>
+        <% end %>
+
+        <div class="deck-result-content">
+          <strong><%= deck.fetch(:name) %></strong>
+          <span class="meta">
+            <%= deck.fetch(:ownerName) %> · <%= deck.fetch(:size) %> cards · <%= deck.fetch(:updatedAt) %>
+          </span>
+          <div class="deck-color-bar">
+            <% if color_bands.empty? %>
+              <span class="deck-color-segment color-C" style="width:100%">C</span>
+            <% else %>
+              <% color_bands.each do |band| %>
+                <% color = band.fetch(:color) %>
+                <span
+                  class="deck-color-segment color-<%= color %>"
+                  style="width:<%= band.fetch(:weight).fdiv(total_weight) * 100 %>%"
+                ><%= color %></span>
+              <% end %>
+            <% end %>
+          </div>
+          <%= button_to "Load this deck",
+            playmat_deck_path(params.require(:space_code)),
+            params: { deckId: deck.fetch(:id) },
+            form: { class: "inline-action" } %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

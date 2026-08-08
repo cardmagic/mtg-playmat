@@ -1,0 +1,82 @@
+<%
+  current_player = initial_room.fetch("players").find do |player|
+    player.fetch("session_id") == authorization_context.session_id
+  end
+  current_seat = current_player.fetch("seat")
+  ordered_seats = [ current_seat, *([ 1, 2 ] - [ current_seat ]) ]
+  player_observables = {
+    1 => :player_one,
+    2 => :player_two
+  }
+  control_observables = {
+    1 => :player_one_controls,
+    2 => :player_two_controls
+  }
+  library_search_observables = {
+    1 => :player_one_library_search,
+    2 => :player_two_library_search
+  }
+%>
+
+<div
+  data-playmat
+  data-action-url="<%= playmat_action_path(actor.reference.actor_id) %>"
+  data-current-player-id="<%= current_player.fetch("id") %>"
+>
+  <section class="topbar-live-meta panel">
+    <div>
+      <div class="space-title-row">
+        <h2><%= initial_room.fetch("name") %> · <%= actor.reference.actor_id %></h2>
+        <button
+          type="button"
+          class="share-link-button"
+          data-copy-text="<%= playmat_share_url(actor.reference.actor_id) %>"
+        >Copy Share Link to Clipboard</button>
+      </div>
+      <p>Share this code: <%= actor.reference.actor_id %> (version <%= actor.version %>)</p>
+    </div>
+    <div class="status-grid">
+      <span>You: <%= current_player.fetch("name") %> (seat <%= current_seat %>)</span>
+      <span>Live via Solid Objects</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="board-layout">
+      <%= actor.component :player_controls,
+        key: current_seat,
+        observes: control_observables.fetch(current_seat),
+        locals: {
+          player_observable: control_observables.fetch(current_seat).to_s
+        },
+        refresh: :morph %>
+
+      <section class="main-table panel">
+        <div id="players-area">
+          <% ordered_seats.each do |seat| %>
+            <%= actor.component :player,
+              key: seat,
+              observes: player_observables.fetch(seat),
+              locals: {
+                player_observable: player_observables.fetch(seat).to_s
+              },
+              refresh: :morph %>
+          <% end %>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <%= actor.component :library_search,
+    key: current_seat,
+    observes: library_search_observables.fetch(current_seat),
+    locals: {
+      player_observable: library_search_observables.fetch(current_seat).to_s
+    },
+    refresh: :morph %>
+
+  <%= actor.component :game_result,
+    observes: :life_totals,
+    locals: { current_seat: },
+    refresh: :morph %>
+</div>

@@ -1,0 +1,64 @@
+service: mtg-playmat
+image: cardmagic/mtg-playmat
+
+servers:
+  web:
+    hosts:
+      - <%= ENV.fetch("KAMAL_SERVER_HOST") %>
+    options:
+      "add-host": host.docker.internal:host-gateway
+  worker:
+    hosts:
+      - <%= ENV.fetch("KAMAL_SERVER_HOST") %>
+    cmd: bundle exec solid_objects start
+    proxy: false
+
+proxy:
+  ssl:
+    certificate_pem: CLOUDFLARE_ORIGIN_CERT
+    private_key_pem: CLOUDFLARE_ORIGIN_KEY
+  host: <%= ENV.fetch("KAMAL_PROXY_HOST") %>
+  app_port: 80
+  forward_headers: true
+  ssl_redirect: false
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 10
+
+registry:
+  server: docker.io
+  username: cardmagic
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    RAILS_LOG_LEVEL: info
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+volumes:
+  - "mtg-playmat-storage:/rails/storage"
+
+asset_path: /rails/public/assets
+
+builder:
+  arch: amd64
+  remote: ssh://<%= ENV.fetch("KAMAL_SSH_USER", "app") %>@<%= ENV.fetch("KAMAL_SERVER_HOST") %>
+  local: true
+  cache:
+    type: registry
+
+ssh:
+  user: <%= ENV.fetch("KAMAL_SSH_USER", "app") %>
+
+deploy_timeout: 120
+drain_timeout: 30

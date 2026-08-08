@@ -1,0 +1,15 @@
+<%
+  life_totals = actor.life_totals
+  current_life = life_totals[current_seat.to_s]
+  opponent_lives = life_totals.except(current_seat.to_s).values
+%>
+
+<% if current_life && current_life <= 0 %>
+  <div class="game-result-banner lose" aria-live="polite">
+    <p class="game-result-banner-text">YOU LOSE</p>
+  </div>
+<% elsif opponent_lives.any? { |life| life <= 0 } %>
+  <div class="game-result-banner win" aria-live="polite">
+    <p class="game-result-banner-text">YOU WIN</p>
+  </div>
+<% end %>

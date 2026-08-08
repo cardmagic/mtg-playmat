@@ -1,0 +1,73 @@
+<% controls = actor.public_send(player_observable) %>
+
+<% if controls && controls.fetch("session_id") == authorization_context.session_id %>
+  <% action_path = playmat_action_path(actor.actor_id) %>
+
+  <aside class="left-rail panel">
+    <details class="deck-browser" <%= "open" unless controls.fetch("deck_name") %>>
+      <summary><%= controls.fetch("deck_name") ? "Change deck" : "Choose a deck" %></summary>
+      <%= form_with url: playmat_deck_search_path,
+        method: :get,
+        class: "deck-search-row",
+        data: { turbo_frame: "deck-search-results" } do |form| %>
+        <%= form.hidden_field :space_code, value: actor.actor_id %>
+        <%= form.search_field :q, placeholder: "Search Archidekt decks", minlength: 2, required: true %>
+        <%= form.submit "Search" %>
+      <% end %>
+
+      <div class="search-term-row">
+        <% %w[oldschool commander cedh modern legacy pioneer pauper budget].each do |term| %>
+          <%= link_to term,
+            playmat_deck_search_path(q: term, space_code: actor.actor_id),
+            class: "search-term-chip",
+            data: { turbo_frame: "deck-search-results" } %>
+        <% end %>
+      </div>
+
+      <%= turbo_frame_tag "deck-search-results", class: "deck-results" %>
+    </details>
+
+    <% if controls.fetch("deck_name") %>
+      <div class="selected-deck-panel">
+        <h4>Loaded deck</h4>
+        <p class="deck-name"><%= controls.fetch("deck_name") %></p>
+        <p class="selected-deck-meta">
+          <span>Library <%= controls.fetch("library_count") %> cards</span>
+          <span>
+            Hand <%= controls.fetch("hand_count") %> ·
+            Graveyard <%= controls.fetch("graveyard_count") %> ·
+            Exile <%= controls.fetch("exile_count") %>
+          </span>
+        </p>
+      </div>
+
+      <div class="controls-block">
+        <h4>Card actions</h4>
+        <div class="button-row">
+          <%= button_to "Draw",
+            action_path,
+            params: { action: { type: "draw_card", count: 1 } },
+            form: { class: "inline-action" } %>
+          <%= button_to "Shuffle",
+            action_path,
+            params: { action: { type: "shuffle_library" } },
+            form: { class: "inline-action" } %>
+          <%= button_to "Untap all",
+            action_path,
+            params: { action: { type: "untap_all" } },
+            form: { class: "inline-action" } %>
+          <%= button_to "Search library",
+            action_path,
+            params: { action: { type: "open_library_search" } },
+            form: { class: "inline-action" } %>
+        </div>
+      </div>
+
+      <div class="controls-block">
+        <h4>Counter token</h4>
+        <p class="hint">Drag this onto a battlefield card.</p>
+        <div class="counter-palette-token" data-counter-palette>+1/+1</div>
+      </div>
+    <% end %>
+  </aside>
+<% end %>

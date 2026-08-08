@@ -1,0 +1,127 @@
+<div class="battlefield">
+  <div
+    class="battlefield-canvas"
+    data-battlefield-player-id="<%= player.fetch("id") %>"
+    style="<%= battlefield_canvas_style(player.fetch("battlefield")) %>"
+  >
+    <% player.fetch("battlefield").each do |card| %>
+      <div
+        id="battlefield_card_<%= card.fetch("instance_id") %>"
+        class="<%= class_names("battlefield-card", tapped: card.fetch("tapped")) %>"
+        data-instance-id="<%= card.fetch("instance_id") %>"
+        data-player-id="<%= player.fetch("id") %>"
+        data-preview-image="<%= card.fetch("image_url") %>"
+        data-preview-name="<%= card.fetch("name") %>"
+        style="left:<%= card.fetch("x") %>px;top:<%= card.fetch("y") %>px"
+      >
+        <img loading="lazy" src="<%= card.fetch("image_url") %>" alt="<%= card.fetch("name") %>" />
+
+        <% if is_current_player %>
+          <div class="card-tools">
+            <%= button_to action_path,
+              params: {
+                action: {
+                  type: "move_card_zone",
+                  instanceId: card.fetch("instance_id"),
+                  from: "battlefield",
+                  to: "hand"
+                }
+              },
+              form: { class: "contents-action" },
+              title: "Move to hand",
+              aria: { label: "Move to hand" } do %>
+              🖐️<span class="card-tool-label">To Hand</span>
+            <% end %>
+
+            <details class="card-library-menu">
+              <summary title="Move to library">🃏<span class="card-tool-label">To Library</span></summary>
+              <div>
+                <% %w[top bottom shuffle].each do |position| %>
+                  <%= button_to position.titleize,
+                    action_path,
+                    params: {
+                      action: {
+                        type: "move_to_deck",
+                        instanceId: card.fetch("instance_id"),
+                        from: "battlefield",
+                        position:
+                      }
+                    },
+                    form: { class: "contents-action" } %>
+                <% end %>
+              </div>
+            </details>
+
+            <%= button_to action_path,
+              params: {
+                action: {
+                  type: "move_card_zone",
+                  instanceId: card.fetch("instance_id"),
+                  from: "battlefield",
+                  to: "graveyard"
+                }
+              },
+              form: { class: "contents-action" },
+              title: "Move to graveyard",
+              aria: { label: "Move to graveyard" } do %>
+              🪦<span class="card-tool-label">To Graveyard</span>
+            <% end %>
+
+            <%= button_to action_path,
+              params: {
+                action: {
+                  type: "move_card_zone",
+                  instanceId: card.fetch("instance_id"),
+                  from: "battlefield",
+                  to: "exile"
+                }
+              },
+              form: { class: "contents-action" },
+              title: "Move to exile",
+              aria: { label: "Move to exile" } do %>
+              ✨<span class="card-tool-label">To Exile</span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% card.fetch("counters").each do |counter| %>
+          <div
+            id="counter_<%= card.fetch("instance_id") %>_<%= counter.fetch("id") %>"
+            class="<%= class_names("counter-chip", "read-only-counter": !is_current_player) %>"
+            data-counter-id="<%= counter.fetch("id") %>"
+            data-instance-id="<%= card.fetch("instance_id") %>"
+            style="left:<%= counter.fetch("x") %>px;top:<%= counter.fetch("y") %>px"
+          >
+            <% if is_current_player %>
+              <%= button_to "-",
+                action_path,
+                params: {
+                  action: {
+                    type: "update_counter_value",
+                    instanceId: card.fetch("instance_id"),
+                    counterId: counter.fetch("id"),
+                    delta: -1
+                  }
+                },
+                form: { class: "inline-action" } %>
+            <% end %>
+            <span class="counter-value"><%= counter.fetch("value") %></span>
+            <% if is_current_player %>
+              <%= button_to "+",
+                action_path,
+                params: {
+                  action: {
+                    type: "update_counter_value",
+                    instanceId: card.fetch("instance_id"),
+                    counterId: counter.fetch("id"),
+                    delta: 1
+                  }
+                },
+                form: { class: "inline-action" } %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
