@@ -67,7 +67,9 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_equal %w[player_one player_two],
       player_registrations.map { |registration| registration.locals.fetch("player_observable") }
     assert registrations.all?(&:morph?)
+    assert registrations.all? { |registration| registration.batch == "playmat" }
     assert_includes session.response.body, "solid_objects/component_refresh"
+    assert_includes session.response.body, "solid_objects/component_batch_refresh"
   end
 
   test "refreshes a personalized component and rejects a non-player" do
