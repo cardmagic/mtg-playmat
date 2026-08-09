@@ -43,10 +43,10 @@
 
     <div class="zone-summary">
       <span>Selected: <%= player.fetch("deck_name") || "not loaded" %></span>
-      <span>Library <%= player.fetch("library").length %></span>
-      <span>Hand <%= player.fetch("hand").length %></span>
-      <span>Graveyard <%= player.fetch("graveyard").length %></span>
-      <span>Exile <%= player.fetch("exile").length %></span>
+      <span data-zone-count="library" data-zone-label="Library" data-count="<%= player.fetch("library").length %>">Library <%= player.fetch("library").length %></span>
+      <span data-zone-count="hand" data-zone-label="Hand" data-count="<%= player.fetch("hand").length %>">Hand <%= player.fetch("hand").length %></span>
+      <span data-zone-count="graveyard" data-zone-label="Graveyard" data-count="<%= player.fetch("graveyard").length %>">Graveyard <%= player.fetch("graveyard").length %></span>
+      <span data-zone-count="exile" data-zone-label="Exile" data-count="<%= player.fetch("exile").length %>">Exile <%= player.fetch("exile").length %></span>
     </div>
 
     <% if is_current_player %>
@@ -55,7 +55,7 @@
           <%= button_to action_path,
             id: "hand_card_#{card.fetch("instance_id")}",
             params: { action: { type: "play_from_hand", instanceId: card.fetch("instance_id") } },
-            form: { class: "contents-action" },
+            form: { class: "contents-action", data: { instant_action: "play_from_hand" } },
             class: "hand-card",
             data: {
               preview_image: card.fetch("image_url"),

@@ -47,7 +47,7 @@
           <%= button_to "Draw",
             action_path,
             params: { action: { type: "draw_card", count: 1 } },
-            form: { class: "inline-action" } %>
+            form: { class: "inline-action", data: { instant_action: "draw_card" } } %>
           <%= button_to "Shuffle",
             action_path,
             params: { action: { type: "shuffle_library" } },

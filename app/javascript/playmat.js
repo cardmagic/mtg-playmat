@@ -15,6 +15,35 @@
     return document.querySelector('meta[name="csrf-token"]')?.content
   }
 
+  function currentPlayerSection() {
+    return document.querySelector('.player-section[data-current-player="true"]')
+  }
+
+  function adjustZoneCount(zone, amount) {
+    const countElement = currentPlayerSection()?.querySelector(`[data-zone-count="${zone}"]`)
+    if (!countElement) {
+      return
+    }
+
+    const nextCount = Math.max(0, Number(countElement.dataset.count) + amount)
+    countElement.dataset.count = nextCount
+    countElement.textContent = `${countElement.dataset.zoneLabel} ${nextCount}`
+  }
+
+  function applyInstantFeedback(form, submitter) {
+    submitter?.classList.add('is-submitting')
+
+    switch (form.dataset.instantAction) {
+      case 'draw_card':
+        adjustZoneCount('library', -1)
+        adjustZoneCount('hand', 1)
+        break
+      case 'play_from_hand':
+        adjustZoneCount('hand', -1)
+        break
+    }
+  }
+
   async function sendAction(action) {
     const playmat = playmatElement()
     if (!playmat) {
@@ -343,6 +372,7 @@
     form.classList.add('is-action-pending')
     form.setAttribute('aria-busy', 'true')
     const submitter = event.detail.formSubmission.submitter
+    applyInstantFeedback(form, submitter)
     submitter?.setAttribute('disabled', 'disabled')
   })
 

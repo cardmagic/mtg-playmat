@@ -220,6 +220,11 @@ button:active {
   cursor: progress;
 }
 
+.is-submitting {
+  opacity: 0.5;
+  transform: scale(0.96);
+}
+
 button:disabled,
 .is-action-pending button {
   cursor: progress;
