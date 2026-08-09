@@ -126,6 +126,7 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_response_for creator, :ok
     assert_includes creator.response.body, "data-playmat"
     assert_includes creator.response.body, "Kitchen Table"
+    assert_includes creator.response.body, "solid_objects/state_payload"
 
     player = open_session
     player.get "/"

@@ -44,7 +44,61 @@
     }
   }
 
-  function reconcilePayload(payload) {
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>\"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]
+    })
+  }
+
+  function clientAction(action, label, className = '') {
+    return `<button type="button" class="${className}" data-client-action='${escapeHtml(JSON.stringify(action))}'>${label}</button>`
+  }
+
+  function cardPreview(card) {
+    return `data-preview-image="${escapeHtml(card.imageUrl)}" data-preview-name="${escapeHtml(card.name)}"`
+  }
+
+  function renderPlayer(player, current) {
+    const zones = ['graveyard', 'exile']
+    const hand = current ? player.hand.slice().reverse().map(function (card) {
+      return `<button type="button" class="hand-card" ${cardPreview(card)} data-client-action='${escapeHtml(JSON.stringify({ type: 'play_from_hand', instanceId: card.instanceId }))}'>` +
+        `<img loading="lazy" src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.name)}"><span>${escapeHtml(card.name)}</span></button>`
+    }).join('') : ''
+    const battlefield = player.battlefield.map(function (card) {
+      const tools = current ? [
+        clientAction({ type: 'move_card_zone', instanceId: card.instanceId, from: 'battlefield', to: 'hand' }, '🖐️', 'card-tool'),
+        clientAction({ type: 'move_to_deck', instanceId: card.instanceId, from: 'battlefield', position: 'top' }, '⬆️', 'card-tool'),
+        clientAction({ type: 'move_to_deck', instanceId: card.instanceId, from: 'battlefield', position: 'bottom' }, '⬇️', 'card-tool'),
+        clientAction({ type: 'move_to_deck', instanceId: card.instanceId, from: 'battlefield', position: 'shuffle' }, '🔀', 'card-tool'),
+        clientAction({ type: 'move_card_zone', instanceId: card.instanceId, from: 'battlefield', to: 'graveyard' }, '🪦', 'card-tool'),
+        clientAction({ type: 'move_card_zone', instanceId: card.instanceId, from: 'battlefield', to: 'exile' }, '✨', 'card-tool')
+      ].join('') : ''
+      const counters = card.counters.map(function (counter) {
+        const controls = current ? clientAction({ type: 'update_counter_value', instanceId: card.instanceId, counterId: counter.id, delta: -1 }, '-') +
+          clientAction({ type: 'update_counter_value', instanceId: card.instanceId, counterId: counter.id, delta: 1 }, '+') : ''
+        return `<div class="counter-chip${current ? '' : ' read-only-counter'}" data-counter-id="${escapeHtml(counter.id)}" data-instance-id="${escapeHtml(card.instanceId)}" style="left:${counter.x}px;top:${counter.y}px">${controls}<span class="counter-value">${counter.value}</span></div>`
+      }).join('')
+      return `<div class="battlefield-card${card.tapped ? ' tapped' : ''}" data-instance-id="${escapeHtml(card.instanceId)}" data-player-id="${escapeHtml(player.id)}" ${cardPreview(card)} style="left:${card.x}px;top:${card.y}px">` +
+        `<img loading="lazy" src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.name)}"><div class="card-tools">${tools}</div>${counters}</div>`
+    }).join('')
+    const lanes = zones.map(function (zone) {
+      const cards = player[zone].slice().reverse().map(function (card, index) {
+        const action = { type: 'move_card_zone', instanceId: card.instanceId, from: zone, to: 'battlefield', x: 48, y: 48 }
+        const content = `<img loading="lazy" src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.name)}">${zone === 'graveyard' && index === 0 ? '<em class="zone-top-badge">TOP</em>' : ''}<span>${escapeHtml(card.name)}</span>`
+        return current ? clientAction(action, content, `zone-card-chip${zone === 'graveyard' && index === 0 ? ' top-zone-card' : ''}`) : `<div class="zone-card-chip read-only">${content}</div>`
+      }).join('')
+      return `<div class="zone-lane"><span class="zone-lane-label">${zone[0].toUpperCase() + zone.slice(1)}${current ? ' (click to move to battlefield)' : ''}</span><div class="zone-lane-cards">${cards}</div></div>`
+    }).join('')
+
+    return `<section class="player-section ${current ? 'your-seat' : 'opponent-seat'}" data-player-id="${escapeHtml(player.id)}" data-current-player="${current}">` +
+      `<header class="player-header"><div class="player-header-name"><strong>${escapeHtml(player.name)}</strong>${!current && player.isSearchingDeck ? '<span class="searching-indicator">Looking through library...</span>' : ''}</div>` +
+      `<div class="life-controls">${current ? clientAction({ type: 'adjust_life', delta: -1 }, '-') : ''}<span class="life-value">${player.life}</span>${current ? clientAction({ type: 'adjust_life', delta: 1 }, '+') + clientAction({ type: 'reset_life' }, 'Reset') : ''}</div></header>` +
+      `<div class="zone-summary"><span>Selected: ${escapeHtml(player.deckName || 'not loaded')}</span>${['library', 'hand', 'graveyard', 'exile'].map(function (zone) { return `<span data-zone-count="${zone}" data-zone-label="${zone[0].toUpperCase() + zone.slice(1)}" data-count="${player[zone].length}">${zone[0].toUpperCase() + zone.slice(1)} ${player[zone].length}</span>` }).join('')}</div>` +
+      (current ? `<div class="hand-strip">${hand}</div>` : '') +
+      `<div class="battlefield"><div class="battlefield-canvas" data-battlefield-player-id="${escapeHtml(player.id)}">${battlefield}</div></div><div class="zone-lanes">${lanes}</div></section>`
+  }
+
+  function renderPayloadBoard(payload) {
     const playmat = playmatElement()
     const players = payload?.space?.players || []
     if (!playmat || players.length === 0) {
@@ -57,25 +111,16 @@
     }
 
     playmat.dataset.roomVersion = String(version)
-    players.forEach(function (player) {
-      const playerSection = document.querySelector(`.player-section[data-player-id="${player.id}"]`)
-      if (!playerSection) {
-        return
-      }
-
-      ;['library', 'hand', 'graveyard', 'exile'].forEach(function (zone) {
-        const countElement = playerSection.querySelector(`[data-zone-count="${zone}"]`)
-        if (!countElement) {
-          return
-        }
-
-        const count = player[zone]?.length || 0
-        countElement.dataset.count = String(count)
-        countElement.textContent = `${countElement.dataset.zoneLabel} ${count}`
-      })
-
-      playerSection.querySelector('.life-value')?.replaceChildren(String(player.life))
+    const currentId = payload.currentPlayerId
+    const orderedPlayers = players.slice().sort(function (left, right) {
+      return left.id === currentId ? -1 : right.id === currentId ? 1 : 0
     })
+    const playersArea = document.getElementById('players-area')
+    if (playersArea) {
+      playersArea.innerHTML = orderedPlayers.map(function (player) {
+        return renderPlayer(player, player.id === currentId)
+      }).join('')
+    }
 
     playmat.classList.remove('is-action-pending')
     playmat.removeAttribute('aria-busy')
@@ -86,7 +131,7 @@
       return
     }
 
-    reconcilePayload(event.detail.payload)
+    renderPayloadBoard(event.detail.payload)
   })
 
   async function sendAction(action) {
@@ -433,6 +478,18 @@
   })
 
   document.addEventListener('click', async function (event) {
+    const actionButton = event.target.closest('[data-client-action]')
+    if (actionButton) {
+      event.preventDefault()
+      actionButton.disabled = true
+      try {
+        await sendAction(JSON.parse(actionButton.dataset.clientAction))
+      } finally {
+        actionButton.disabled = false
+      }
+      return
+    }
+
     const copyButton = event.target.closest('[data-copy-text]')
     if (!copyButton) {
       return
