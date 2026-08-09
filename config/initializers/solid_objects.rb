@@ -10,11 +10,8 @@ SolidObjects.configure do |configuration|
   }
   configuration.process_retention = 7.days
   configuration.prune_batch_size = 1_000
-  configuration.component_authorization_context = lambda do |controller:|
-    token = controller.params[:token] || Array(controller.params[:tokens]).first
-    registration = SolidObjects::ComponentRegistration.from_token(
-      token
-    )
+  configuration.component_authorization_context = lambda do |controller:, registrations:|
+    registration = registrations.first
     authorization = Playmat::Authorization.new(
       room_code: registration.reference.actor_id,
       session_id: controller.request.cookie_jar.signed[Playmat::SESSION_COOKIE]
