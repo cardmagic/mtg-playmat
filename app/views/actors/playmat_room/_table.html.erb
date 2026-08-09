@@ -50,7 +50,6 @@
         locals: {
           player_observable: control_observables.fetch(current_seat).to_s
         },
-        batch: :playmat,
         refresh: :morph %>
 
       <section class="main-table panel">
@@ -62,7 +61,6 @@
               locals: {
                 player_observable: player_observables.fetch(seat).to_s
               },
-              batch: :playmat,
               refresh: :morph %>
           <% end %>
         </div>
@@ -76,12 +74,10 @@
     locals: {
       player_observable: library_search_observables.fetch(current_seat).to_s
     },
-    batch: :playmat,
     refresh: :morph %>
 
   <%= actor.component :game_result,
     observes: :life_totals,
     locals: { current_seat: },
-    batch: :playmat,
     refresh: :morph %>
 </div>
