@@ -113,6 +113,29 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_response_for outsider, :forbidden
   end
 
+  test "refreshes batched components" do
+    player = open_session
+    player.get "/"
+    player.post "/api/spaces", params: { playerName: "Alice" }, as: :json
+    room_code = player.response.parsed_body.dig("space", "code")
+    player.get "/api/spaces/#{room_code}/observer"
+
+    source = Nokogiri::HTML5(player.response.body).at_css("turbo-cable-stream-source")
+    registration = component_tokens(source).map do |token|
+      SolidObjects::ComponentRegistration.from_token(token)
+    end.find { |candidate| candidate.component_name == "player" }
+    assert_equal "playmat", registration.batch
+
+    player.get "/solid_objects/components/batch", params: {
+      instance_id: registration.instance_id,
+      revision: registration.revision,
+      tokens: [ registration.token ]
+    }
+
+    assert_equal 200, player.response.status, player.response.body
+    assert_equal 1, player.response.parsed_body.fetch("frames").length
+  end
+
   test "creates and joins through server-rendered forms" do
     creator = open_session
     creator.get "/"
