@@ -1,5 +1,7 @@
 <div id="room-live-observer">
-  <%= solid_object @room_reference, authorization_context: @authorization do |room| %>
+  <%= solid_object @room_reference,
+    authorization_context: @authorization,
+    payloads: :playmat_state do |room| %>
     <%= render "actors/playmat_room/table",
       actor: room,
       authorization_context: @authorization,

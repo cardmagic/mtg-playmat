@@ -37,6 +37,13 @@ class PlaymatRoom < SolidObjects::Actor
     player_library_search(player_in_seat(2))
   end
 
+  broadcast_payload :playmat_state do |actor, authorization_context|
+    Playmat::RoomSnapshot.new(
+      actor.room,
+      session_id: authorization_context.session_id
+    ).payload
+  end
+
   def create_room(code:, room_name:, player_name:, session_id:)
     return "exists" if room
 

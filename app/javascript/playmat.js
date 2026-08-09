@@ -44,6 +44,51 @@
     }
   }
 
+  function reconcilePayload(payload) {
+    const playmat = playmatElement()
+    const players = payload?.space?.players || []
+    if (!playmat || players.length === 0) {
+      return
+    }
+
+    const version = Number(payload.space.version || 0)
+    if (version <= Number(playmat.dataset.roomVersion || 0)) {
+      return
+    }
+
+    playmat.dataset.roomVersion = String(version)
+    players.forEach(function (player) {
+      const playerSection = document.querySelector(`.player-section[data-player-id="${player.id}"]`)
+      if (!playerSection) {
+        return
+      }
+
+      ;['library', 'hand', 'graveyard', 'exile'].forEach(function (zone) {
+        const countElement = playerSection.querySelector(`[data-zone-count="${zone}"]`)
+        if (!countElement) {
+          return
+        }
+
+        const count = player[zone]?.length || 0
+        countElement.dataset.count = String(count)
+        countElement.textContent = `${countElement.dataset.zoneLabel} ${count}`
+      })
+
+      playerSection.querySelector('.life-value')?.replaceChildren(String(player.life))
+    })
+
+    playmat.classList.remove('is-action-pending')
+    playmat.removeAttribute('aria-busy')
+  }
+
+  document.addEventListener('solid-objects:payload', function (event) {
+    if (event.detail.name !== 'playmat_state') {
+      return
+    }
+
+    reconcilePayload(event.detail.payload)
+  })
+
   async function sendAction(action) {
     const playmat = playmatElement()
     if (!playmat) {
