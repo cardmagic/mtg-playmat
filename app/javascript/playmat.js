@@ -28,6 +28,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Prefer': 'respond-async',
           'X-CSRF-Token': csrfToken(),
         },
         body: JSON.stringify({ action: action }),

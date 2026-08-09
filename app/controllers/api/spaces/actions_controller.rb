@@ -4,6 +4,17 @@ class Api::Spaces::ActionsController < Api::ApplicationController
   def create
     action = request.request_parameters["action"]
     action = action.to_unsafe_h if action.respond_to?(:to_unsafe_h)
+
+    if interactive_request?
+      room_reference.async(
+        :apply_action,
+        action:,
+        session_id: playmat_session_id,
+        authorization_context: room_authorization
+      )
+      return head :no_content
+    end
+
     result = room_reference.apply_action(
       action:,
       session_id: playmat_session_id,
@@ -20,5 +31,11 @@ class Api::Spaces::ActionsController < Api::ApplicationController
     else
       render json: { error: "Space not found" }, status: :not_found
     end
+  end
+
+  private
+
+  def interactive_request?
+    request.format.html? || request.format.turbo_stream? || request.headers["Prefer"] == "respond-async"
   end
 end
