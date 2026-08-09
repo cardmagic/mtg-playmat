@@ -21,22 +21,29 @@
       return
     }
 
-    const response = await fetch(playmat.dataset.actionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken(),
-      },
-      body: JSON.stringify({ action: action }),
-    })
-    if (response.ok) {
-      return
-    }
+    playmat.classList.add('is-action-pending')
+    playmat.setAttribute('aria-busy', 'true')
+    try {
+      const response = await fetch(playmat.dataset.actionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken(),
+        },
+        body: JSON.stringify({ action: action }),
+      })
+      if (response.ok) {
+        return
+      }
 
-    const payload = await response.json().catch(function () {
-      return null
-    })
-    alert(payload?.error || 'Action failed')
+      const payload = await response.json().catch(function () {
+        return null
+      })
+      alert(payload?.error || 'Action failed')
+    } finally {
+      playmat.classList.remove('is-action-pending')
+      playmat.removeAttribute('aria-busy')
+    }
   }
 
   function belongsToCurrentPlayer(element) {
@@ -325,6 +332,29 @@
 
   document.addEventListener('pointercancel', resetDrags)
   document.addEventListener('turbo:before-frame-render', resetDrags)
+
+  document.addEventListener('turbo:submit-start', function (event) {
+    const form = event.target
+    if (!form.matches('.inline-action, .contents-action')) {
+      return
+    }
+
+    form.classList.add('is-action-pending')
+    form.setAttribute('aria-busy', 'true')
+    const submitter = event.detail.formSubmission.submitter
+    submitter?.setAttribute('disabled', 'disabled')
+  })
+
+  document.addEventListener('turbo:submit-end', function (event) {
+    const form = event.target
+    if (!form.matches('.inline-action, .contents-action')) {
+      return
+    }
+
+    form.classList.remove('is-action-pending')
+    form.removeAttribute('aria-busy')
+    event.detail.formSubmission.submitter?.removeAttribute('disabled')
+  })
 
   document.addEventListener('click', async function (event) {
     const copyButton = event.target.closest('[data-copy-text]')

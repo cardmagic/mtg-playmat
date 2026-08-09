@@ -27,13 +27,13 @@ module RoomScoped
   end
 
   def render_room(status: :ok)
+    return head :no_content if request.format.html? || request.format.turbo_stream?
+
     snapshot = room_snapshot
     return render json: { error: "Space not found" }, status: :not_found unless snapshot
 
     respond_to do |format|
       format.json { render json: snapshot.payload, status: }
-      format.html { head :no_content }
-      format.turbo_stream { head :no_content }
     end
   end
 end

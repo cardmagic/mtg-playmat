@@ -216,6 +216,31 @@ button:active {
   transform: translateY(0);
 }
 
+.is-action-pending {
+  cursor: progress;
+}
+
+button:disabled,
+.is-action-pending button {
+  cursor: progress;
+  filter: saturate(0.65) brightness(0.9);
+}
+
+[data-playmat].is-action-pending::before {
+  position: fixed;
+  z-index: 10;
+  top: 1rem;
+  left: 50%;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(218, 187, 129, 0.44);
+  border-radius: 999px;
+  background: rgba(15, 20, 30, 0.94);
+  color: #f9f2e6;
+  content: 'Updating…';
+  font-size: 0.8rem;
+  transform: translateX(-50%);
+}
+
 .hidden {
   display: none !important;
 }
