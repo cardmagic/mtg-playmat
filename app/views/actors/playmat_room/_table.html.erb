@@ -33,7 +33,7 @@
           data-copy-text="<%= playmat_share_url(actor.reference.actor_id) %>"
         >Copy Share Link to Clipboard</button>
       </div>
-      <p>Share this code: <%= actor.reference.actor_id %> (version <%= actor.version %>)</p>
+      <p>Share this code: <%= actor.reference.actor_id %> (version <%= initial_room.fetch("version") %>)</p>
     </div>
     <div class="status-grid">
       <span>You: <%= current_player.fetch("name") %> (seat <%= current_seat %>)</span>

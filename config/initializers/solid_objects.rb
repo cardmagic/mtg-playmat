@@ -3,6 +3,7 @@ SolidObjects.configure do |configuration|
   configuration.effect_worker_count = 1
   configuration.broadcast_worker_count = 1
   configuration.reminder_scheduler_count = 1
+  configuration.polling_interval = 0.02.seconds
   configuration.message_retention = 30.days
   configuration.message_retention_by_actor_type = {
     "playmat_room" => 1.day
