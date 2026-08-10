@@ -294,6 +294,7 @@ button:disabled,
   display: flex;
   flex-wrap: wrap;
   gap: 0.34rem;
+  padding: 0.22rem 0;
 }
 
 .search-term-chip {
