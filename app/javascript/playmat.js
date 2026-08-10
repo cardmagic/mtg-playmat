@@ -117,9 +117,16 @@
     })
     const playersArea = document.getElementById('players-area')
     if (playersArea) {
-      playersArea.innerHTML = orderedPlayers.map(function (player) {
-        return renderPlayer(player, player.id === currentId)
-      }).join('')
+      const playerFrames = Array.from(playersArea.querySelectorAll('turbo-frame'))
+      orderedPlayers.forEach(function (player, index) {
+        const frame = playerFrames[index]
+        if (!frame) {
+          return
+        }
+
+        frame.innerHTML = renderPlayer(player, player.id === currentId)
+        playersArea.appendChild(frame)
+      })
     }
 
     playmat.classList.remove('is-action-pending')
