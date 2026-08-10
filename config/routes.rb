@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :api do
+    post "telemetry", to: "telemetry#create", as: :telemetry
     post "spaces/join", to: "spaces/memberships#create", as: :space_join
 
     resources :spaces, param: :code, only: :create do

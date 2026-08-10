@@ -144,6 +144,26 @@
     renderPayloadBoard(event.detail.payload)
   })
 
+  function reportClientTiming(actionType, startedAt, responseReceivedAt, payloadParsedAt, renderedAt) {
+    const durations = {
+      fetch: responseReceivedAt - startedAt,
+      response_json: payloadParsedAt - responseReceivedAt,
+      render: renderedAt - payloadParsedAt,
+      total: renderedAt - startedAt,
+    }
+
+    fetch('/api/telemetry', {
+      method: 'POST',
+      credentials: 'same-origin',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken(),
+      },
+      body: JSON.stringify({ measurement: { action_type: actionType, durations: durations } }),
+    }).catch(function () {})
+  }
+
   async function sendAction(action) {
     const playmat = playmatElement()
     if (!playmat) {
@@ -152,6 +172,7 @@
 
     playmat.classList.add('is-action-pending')
     playmat.setAttribute('aria-busy', 'true')
+    const startedAt = performance.now()
     try {
       const response = await fetch(playmat.dataset.actionUrl, {
         method: 'POST',
@@ -162,11 +183,14 @@
         },
         body: JSON.stringify({ action: action }),
       })
+      const responseReceivedAt = performance.now()
       const payload = await response.json().catch(function () {
         return null
       })
+      const payloadParsedAt = performance.now()
       if (response.ok && payload?.space) {
         renderPayloadBoard(payload)
+        reportClientTiming(action.type, startedAt, responseReceivedAt, payloadParsedAt, performance.now())
         return payload
       }
 

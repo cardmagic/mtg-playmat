@@ -34,6 +34,20 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_response_for first_player, :no_content
   end
 
+  test "accepts browser action timing measurements" do
+    player = open_session
+    player.get "/"
+
+    player.post "/api/telemetry", params: {
+      measurement: {
+        action_type: "draw_card",
+        durations: { fetch: 42.5, response_json: 1.2, render: 8.7, total: 52.4 }
+      }
+    }, as: :json
+
+    assert_response_for player, :no_content
+  end
+
   test "renders the playmat through a reactive Solid Objects component" do
     assert defined?(SolidObjects::ActorChannel)
 
