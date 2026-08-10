@@ -20,20 +20,30 @@ SolidObjects.configure do |configuration|
     authorization if authorization.player_in?(room)
   end
 
+  authorization_for = lambda do |actor_id:, authorization_context:|
+    next authorization_context if authorization_context.is_a?(Playmat::Authorization)
+
+    session_id = authorization_context.playmat_session_id if
+      authorization_context.respond_to?(:playmat_session_id)
+    next if session_id.blank?
+
+    Playmat::Authorization.new(room_code: actor_id, session_id:)
+  end
+
   authorize_room = lambda do |actor_type:, actor_id:, authorization_context:, **|
-    authorization_context.is_a?(Playmat::Authorization) &&
-      authorization_context.valid_for?(actor_type:, actor_id:)
+    authorization = authorization_for.call(actor_id:, authorization_context:)
+    authorization&.valid_for?(actor_type:, actor_id:)
   end
 
   configuration.authorize_message = authorize_room
   configuration.authorize_query = authorize_room
   configuration.authorize_destroy = ->(**) { false }
   configuration.authorize_subscription = lambda do |actor_type:, actor_id:, authorization_context:, **|
-    session_id = authorization_context.playmat_session_id if
-      authorization_context.respond_to?(:playmat_session_id)
-    next false unless actor_type == PlaymatRoom.actor_type && session_id.present?
+    next false unless actor_type == PlaymatRoom.actor_type
 
-    authorization = Playmat::Authorization.new(room_code: actor_id, session_id:)
+    authorization = authorization_for.call(actor_id:, authorization_context:)
+    next false unless authorization
+
     room = PlaymatRoom.ref(actor_id).snapshot(authorization_context: authorization).room
     authorization.player_in?(room)
   end
