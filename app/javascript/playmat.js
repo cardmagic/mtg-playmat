@@ -48,6 +48,15 @@
     }
   }
 
+  function applyInstantCardFeedback(action) {
+    if (action.type !== 'toggle_tap') {
+      return
+    }
+
+    const card = currentPlayerSection()?.querySelector(`[data-instance-id="${CSS.escape(action.instanceId)}"]`)
+    card?.classList.toggle('tapped')
+  }
+
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>\"']/g, function (character) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]
@@ -175,28 +184,30 @@
     playmat.classList.add('is-action-pending')
     playmat.setAttribute('aria-busy', 'true')
     const startedAt = performance.now()
+    applyInstantCardFeedback(action)
     try {
       const response = await fetch(playmat.dataset.actionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          'Accept': 'text/html',
+          'Prefer': 'respond-async',
           'X-CSRF-Token': csrfToken(),
         },
         body: JSON.stringify({ action: action }),
       })
       const responseReceivedAt = performance.now()
-      const payload = await response.json().catch(function () {
-        return null
-      })
-      const payloadParsedAt = performance.now()
-      if (response.ok && payload?.space) {
-        renderPayloadBoard(payload)
-        reportClientTiming(action.type, startedAt, responseReceivedAt, payloadParsedAt, performance.now())
-        return payload
+      if (response.ok) {
+        reportClientDurations(action.type, {
+          fetch: responseReceivedAt - startedAt,
+          response_json: 0,
+          render: 0,
+          total: responseReceivedAt - startedAt,
+        })
+        return
       }
 
-      alert(payload?.error || 'Action failed')
+      alert('Action failed')
     } finally {
       playmat.classList.remove('is-action-pending')
       playmat.removeAttribute('aria-busy')
@@ -578,6 +589,43 @@
   })
 
   document.addEventListener('submit', function (event) {
+    const actionForm = event.target.closest('form.inline-action, form.contents-action')
+    if (actionForm) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      const submitter = event.submitter || actionForm.querySelector('[type="submit"]')
+      applyInstantFeedback(actionForm, submitter)
+      submitter?.setAttribute('disabled', 'disabled')
+      const startedAt = performance.now()
+      fetch(actionForm.action, {
+        method: 'POST',
+        body: new FormData(actionForm),
+        credentials: 'same-origin',
+        headers: {
+          Accept: 'text/html',
+          Prefer: 'respond-async',
+          'X-CSRF-Token': csrfToken(),
+        },
+      }).then(function (response) {
+        const finishedAt = performance.now()
+        if (!response.ok) {
+          throw new Error('Action failed')
+        }
+
+        reportClientDurations(actionForm.dataset.instantAction, {
+          fetch: finishedAt - startedAt,
+          response_json: 0,
+          render: 0,
+          total: finishedAt - startedAt,
+        })
+      }).catch(function () {
+        alert('Action failed')
+      }).finally(function () {
+        submitter?.removeAttribute('disabled')
+      })
+      return
+    }
+
     const form = event.target.closest('form[data-immediate-action="load_deck"]')
     if (!form) {
       return
