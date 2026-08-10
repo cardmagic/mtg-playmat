@@ -152,17 +152,52 @@
         },
         body: JSON.stringify({ action: action }),
       })
-      if (response.ok) {
-        return
-      }
-
       const payload = await response.json().catch(function () {
         return null
       })
+      if (response.ok && payload?.space) {
+        renderPayloadBoard(payload)
+        return payload
+      }
+
       alert(payload?.error || 'Action failed')
     } finally {
       playmat.classList.remove('is-action-pending')
       playmat.removeAttribute('aria-busy')
+    }
+  }
+
+  async function submitImmediateDeck(form) {
+    const playmat = playmatElement()
+    const submitter = form.querySelector('[type="submit"]')
+    if (!playmat || !submitter) {
+      return
+    }
+
+    submitter.disabled = true
+    form.classList.add('is-action-pending')
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        credentials: 'same-origin',
+        headers: {
+          Accept: 'application/json',
+          'X-CSRF-Token': csrfToken(),
+        },
+      })
+      const payload = await response.json().catch(function () {
+        return null
+      })
+      if (response.ok && payload?.space) {
+        renderPayloadBoard(payload)
+        return
+      }
+
+      alert(payload?.error || 'Could not load deck')
+    } finally {
+      submitter.disabled = false
+      form.classList.remove('is-action-pending')
     }
   }
 
@@ -475,6 +510,16 @@
     form.classList.remove('is-action-pending')
     form.removeAttribute('aria-busy')
     event.detail.formSubmission.submitter?.removeAttribute('disabled')
+  })
+
+  document.addEventListener('submit', function (event) {
+    const form = event.target.closest('form[data-immediate-action="load_deck"]')
+    if (!form) {
+      return
+    }
+
+    event.preventDefault()
+    submitImmediateDeck(form)
   })
 
   document.addEventListener('click', async function (event) {

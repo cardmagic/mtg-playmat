@@ -36,7 +36,10 @@
           <%= button_to "Load this deck",
             playmat_deck_path(params.require(:space_code)),
             params: { deckId: deck.fetch(:id) },
-            form: { class: "inline-action" } %>
+            form: {
+              class: "inline-action",
+              data: { immediate_action: "load_deck", turbo: false }
+            } %>
         </div>
       </div>
     <% end %>

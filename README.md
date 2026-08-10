@@ -18,6 +18,26 @@ details. Polling remains active as a fallback.
 Archidekt requests happen outside the actor. Loaded deck data enters the actor
 as one ordered message.
 
+## Reactive ERB tour
+
+The quickest way to see Solid Objects in a real Rails page is to follow these
+links in this repository:
+
+- [`show.html.erb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/views/api/spaces/observers/show.html.erb)
+  mounts the room actor and its reactive state payload.
+- [`_table.html.erb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/views/actors/playmat_room/_table.html.erb)
+  composes the reactive ERB components and assigns their observables.
+- [`_player.html.erb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/views/actors/playmat_room/_player.html.erb)
+  renders a per-player component with session-aware authorization.
+- [`playmat_room.rb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/actors/playmat_room.rb)
+  defines the actor methods and observable state that those templates consume.
+- [`solid_objects.rb`](https://github.com/cardmagic/mtg-playmat/blob/main/config/initializers/solid_objects.rb)
+  shows the authorization boundary used for component refreshes.
+
+The browser keeps these controls and search results as reactive ERB components,
+while high-frequency board mutations apply the actor's state payload directly
+so the table can update without waiting for a follow-up component request.
+
 ## Setup
 
 ```bash

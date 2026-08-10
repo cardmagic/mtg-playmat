@@ -36,6 +36,8 @@ class Api::Spaces::ActionsController < Api::ApplicationController
   private
 
   def interactive_request?
+    return false if request.format.json?
+
     request.format.html? || request.format.turbo_stream? || request.headers["Prefer"] == "respond-async"
   end
 end

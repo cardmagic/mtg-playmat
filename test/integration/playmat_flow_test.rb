@@ -203,6 +203,24 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_equal 1, current_player(player.response.parsed_body).fetch("library").length
   end
 
+  test "returns the loaded deck immediately for JSON requests" do
+    player = open_session
+    player.post "/api/spaces", params: { playerName: "Alice" }, as: :json
+    room_code = player.response.parsed_body.dig("space", "code")
+    client_class = Class.new do
+      def deck(_deck_id)
+        { name: "Green Machine", cards: [] }
+      end
+    end
+
+    stub_const(Archidekt, :Client, client_class) do
+      player.post "/api/spaces/#{room_code}/deck", params: { deckId: "123" }, as: :json
+    end
+
+    assert_response_for player, :ok
+    assert_equal "Green Machine", current_player(player.response.parsed_body).fetch("deckName")
+  end
+
   test "rejects malformed actions and a third player" do
     first_player = open_session
     second_player = open_session
