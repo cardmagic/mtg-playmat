@@ -48,6 +48,21 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_response_for player, :no_content
   end
 
+  test "accepts reactive payload measurements" do
+    player = open_session
+    player.get "/"
+
+    player.post "/api/telemetry", params: {
+      measurement: {
+        event_type: "payload_refresh",
+        payload_version: 12,
+        pending_actions: 1
+      }
+    }, as: :json
+
+    assert_response_for player, :no_content
+  end
+
   test "renders the playmat through a reactive Solid Objects component" do
     assert defined?(SolidObjects::ActorChannel)
 

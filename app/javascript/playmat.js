@@ -3,6 +3,9 @@
   let counterDrag = null
   let counterPaletteDrag = null
   const pendingTapStates = new Map()
+  const pendingOptimisticActions = new Map()
+  let deferredPayload = null
+  let deferredPayloadTimer = null
 
   function playmatElement() {
     return document.querySelector('[data-playmat]')
@@ -151,7 +154,27 @@
     }
 
     const version = Number(payload.space.version || 0)
+    reportPayloadArrival(version, pendingOptimisticActions.size)
     if (version <= Number(playmat.dataset.roomVersion || 0)) {
+      return
+    }
+
+    const now = performance.now()
+    const deferred = Array.from(pendingOptimisticActions.values()).some(function (pending) {
+      return now - pending.startedAt < 5000 && version <= pending.baseVersion
+    })
+    if (deferred) {
+      deferredPayload = payload
+      if (!deferredPayloadTimer) {
+        deferredPayloadTimer = window.setTimeout(function retryDeferredPayload() {
+          deferredPayloadTimer = null
+          const nextPayload = deferredPayload
+          deferredPayload = null
+          if (nextPayload) {
+            renderPayloadBoard(nextPayload)
+          }
+        }, 250)
+      }
       return
     }
 
@@ -175,6 +198,12 @@
 
     reconcilePendingTapStates(payload)
 
+    pendingOptimisticActions.forEach(function (pending, token) {
+      if (version > pending.baseVersion || now - pending.startedAt >= 5000) {
+        pendingOptimisticActions.delete(token)
+      }
+    })
+
     playmat.classList.remove('is-action-pending')
     playmat.removeAttribute('aria-busy')
   }
@@ -186,6 +215,34 @@
 
     renderPayloadBoard(event.detail.payload)
   })
+
+  function reportPayloadArrival(version, pendingActions) {
+    fetch('/api/telemetry', {
+      method: 'POST',
+      credentials: 'same-origin',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken(),
+      },
+      body: JSON.stringify({
+        measurement: {
+          event_type: 'payload_refresh',
+          payload_version: version,
+          pending_actions: pendingActions,
+        },
+      }),
+    }).catch(function () {})
+  }
+
+  function beginOptimisticAction(actionType) {
+    const playmat = playmatElement()
+    const token = `${actionType}:${performance.now()}`
+    pendingOptimisticActions.set(token, {
+      baseVersion: Number(playmat?.dataset.roomVersion || 0),
+      startedAt: performance.now(),
+    })
+  }
 
   function reportClientDurations(actionType, durations) {
     fetch('/api/telemetry', {
@@ -218,6 +275,7 @@
     playmat.classList.add('is-action-pending')
     playmat.setAttribute('aria-busy', 'true')
     const startedAt = performance.now()
+    beginOptimisticAction(action.type)
     applyInstantCardFeedback(action)
     try {
       const response = await fetch(playmat.dataset.actionUrl, {
@@ -628,6 +686,7 @@
       event.preventDefault()
       event.stopImmediatePropagation()
       const submitter = event.submitter || actionForm.querySelector('[type="submit"]')
+      beginOptimisticAction(actionForm.dataset.instantAction)
       applyInstantFeedback(actionForm, submitter)
       submitter?.setAttribute('disabled', 'disabled')
       const startedAt = performance.now()
