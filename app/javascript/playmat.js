@@ -129,7 +129,6 @@
         }
 
         frame.innerHTML = renderPlayer(player, isCurrentPlayer(player, currentId))
-        playersArea.appendChild(frame)
       })
     }
 
