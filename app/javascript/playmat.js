@@ -144,14 +144,7 @@
     renderPayloadBoard(event.detail.payload)
   })
 
-  function reportClientTiming(actionType, startedAt, responseReceivedAt, payloadParsedAt, renderedAt) {
-    const durations = {
-      fetch: responseReceivedAt - startedAt,
-      response_json: payloadParsedAt - responseReceivedAt,
-      render: renderedAt - payloadParsedAt,
-      total: renderedAt - startedAt,
-    }
-
+  function reportClientDurations(actionType, durations) {
     fetch('/api/telemetry', {
       method: 'POST',
       credentials: 'same-origin',
@@ -162,6 +155,15 @@
       },
       body: JSON.stringify({ measurement: { action_type: actionType, durations: durations } }),
     }).catch(function () {})
+  }
+
+  function reportClientTiming(actionType, startedAt, responseReceivedAt, payloadParsedAt, renderedAt) {
+    reportClientDurations(actionType, {
+      fetch: responseReceivedAt - startedAt,
+      response_json: payloadParsedAt - responseReceivedAt,
+      render: renderedAt - payloadParsedAt,
+      total: renderedAt - startedAt,
+    })
   }
 
   async function sendAction(action) {
@@ -530,6 +532,7 @@
 
     form.classList.add('is-action-pending')
     form.setAttribute('aria-busy', 'true')
+    form.dataset.clientStartedAt = String(performance.now())
     const submitter = event.detail.formSubmission.submitter
     applyInstantFeedback(form, submitter)
     submitter?.setAttribute('disabled', 'disabled')
@@ -543,7 +546,35 @@
 
     form.classList.remove('is-action-pending')
     form.removeAttribute('aria-busy')
+    const startedAt = Number(form.dataset.clientStartedAt)
+    const responseReceivedAt = Number(form.dataset.clientResponseAt) || performance.now()
+    const renderedAt = performance.now()
+    if (Number.isFinite(startedAt)) {
+      reportClientDurations(form.dataset.instantAction, {
+        fetch: responseReceivedAt - startedAt,
+        response_json: 0,
+        render: renderedAt - responseReceivedAt,
+        total: renderedAt - startedAt,
+      })
+    }
+    delete form.dataset.clientStartedAt
+    delete form.dataset.clientFetchStartedAt
+    delete form.dataset.clientResponseAt
     event.detail.formSubmission.submitter?.removeAttribute('disabled')
+  })
+
+  document.addEventListener('turbo:before-fetch-request', function (event) {
+    const form = event.target.closest('form[data-instant-action]')
+    if (form) {
+      form.dataset.clientFetchStartedAt = String(performance.now())
+    }
+  })
+
+  document.addEventListener('turbo:before-fetch-response', function (event) {
+    const form = event.target.closest('form[data-instant-action]')
+    if (form) {
+      form.dataset.clientResponseAt = String(performance.now())
+    }
   })
 
   document.addEventListener('submit', function (event) {
