@@ -147,7 +147,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Prefer': 'respond-async',
+          'Accept': 'application/json',
           'X-CSRF-Token': csrfToken(),
         },
         body: JSON.stringify({ action: action }),
