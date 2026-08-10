@@ -40,8 +40,14 @@ class PlaymatRoom < SolidObjects::Actor
   broadcast_payload :playmat_state do |actor, authorization_context|
     Playmat::RoomSnapshot.new(
       actor.room,
-      session_id: payload_session_id(authorization_context)
+      session_id: PlaymatRoom.payload_session_id(authorization_context)
     ).payload
+  end
+
+  def self.payload_session_id(authorization_context)
+    return authorization_context.session_id if authorization_context.respond_to?(:session_id)
+
+    authorization_context.playmat_session_id if authorization_context.respond_to?(:playmat_session_id)
   end
 
   def create_room(code:, room_name:, player_name:, session_id:)
@@ -173,12 +179,6 @@ class PlaymatRoom < SolidObjects::Actor
 
   def normalized_room_name(value)
     normalized_name(value, fallback: "Gaming Table", maximum_length: 40)
-  end
-
-  def payload_session_id(authorization_context)
-    return authorization_context.session_id if authorization_context.respond_to?(:session_id)
-
-    authorization_context.playmat_session_id if authorization_context.respond_to?(:playmat_session_id)
   end
 
   def normalized_name(value, fallback:, maximum_length:)

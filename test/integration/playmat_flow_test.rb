@@ -77,9 +77,7 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
 
   test "reads payload sessions from an actor connection" do
     connection = Struct.new(:playmat_session_id).new("session-1")
-    actor = PlaymatRoom.allocate
-
-    assert_equal "session-1", actor.send(:payload_session_id, connection)
+    assert_equal "session-1", PlaymatRoom.payload_session_id(connection)
   end
 
   test "renders the playmat through a reactive Solid Objects component" do
