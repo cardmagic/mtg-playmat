@@ -23,6 +23,9 @@ gem "solid_cache"
 gem "solid_objects", "~> 0.7.0"
 gem "solid_queue"
 gem "solid_cable"
+gem "honeybadger", "~> 6.9"
+gem "opentelemetry-sdk"
+gem "opentelemetry-exporter-otlp"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

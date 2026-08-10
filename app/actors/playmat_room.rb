@@ -101,17 +101,23 @@ class PlaymatRoom < SolidObjects::Actor
   end
 
   def apply_action(action:, session_id:)
-    return "not_found" unless room
+    action_type = action.is_a?(Hash) && (action["type"] || action[:type]).to_s
+    tracer = OpenTelemetry.tracer_provider.tracer("mtg-playmat")
 
-    player = player_for(session_id)
-    return "forbidden" unless player
+    tracer.in_span("playmat.actor_action", attributes: { "playmat.action.type" => action_type }) do |span|
+      return "not_found" unless room
 
-    parsed_action = Playmat::Action.parse(action)
-    return "invalid" unless parsed_action
+      player = player_for(session_id)
+      return "forbidden" unless player
 
-    replacement = Playmat::Player.new(player).apply(parsed_action)
-    commit(replace_player(replacement))
-    "applied"
+      parsed_action = tracer.in_span("playmat.action.parse") { Playmat::Action.parse(action) }
+      return "invalid" unless parsed_action
+
+      replacement = tracer.in_span("playmat.action.apply") { Playmat::Player.new(player).apply(parsed_action) }
+      tracer.in_span("playmat.action.commit") { commit(replace_player(replacement)) }
+      span.set_attribute("playmat.action.result", "applied")
+      "applied"
+    end
   end
 
   private

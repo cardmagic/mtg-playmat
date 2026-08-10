@@ -48,6 +48,15 @@ bin/dev
 `bin/dev` starts the Rails server and the Solid Objects runtime. Production
 needs both processes from the included `Procfile`.
 
+## Honeybadger tracing
+
+Production exports OpenTelemetry spans to Honeybadger when
+`HONEYBADGER_API_KEY` is present. The traced interaction spans are
+`draw_card`, `play_from_hand`, and `toggle_tap`, with nested actor parse,
+apply, and commit spans. Keep the key in your secret manager or deployment
+environment; it is intentionally not stored in this repository. Set
+`OTEL_EXPORTER_OTLP_ENDPOINT` only when using a different OTLP collector.
+
 ## Kamal deployment
 
 The public deployment configuration contains no infrastructure addresses or
