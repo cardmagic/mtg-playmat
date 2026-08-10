@@ -2,6 +2,7 @@
   let battlefieldCardDrag = null
   let counterDrag = null
   let counterPaletteDrag = null
+  const pendingTapStates = new Map()
 
   function playmatElement() {
     return document.querySelector('[data-playmat]')
@@ -54,7 +55,38 @@
     }
 
     const card = currentPlayerSection()?.querySelector(`[data-instance-id="${CSS.escape(action.instanceId)}"]`)
-    card?.classList.toggle('tapped')
+    if (!card) {
+      return
+    }
+
+    const tapped = !card.classList.contains('tapped')
+    pendingTapStates.set(action.instanceId, { tapped: tapped, startedAt: performance.now() })
+    card.classList.toggle('tapped', tapped)
+  }
+
+  function reconcilePendingTapStates(payload) {
+    const players = payload?.space?.players || []
+    const cards = players.flatMap(function (player) { return player.battlefield || [] })
+
+    pendingTapStates.forEach(function (pending, instanceId) {
+      if (performance.now() - pending.startedAt > 5000) {
+        pendingTapStates.delete(instanceId)
+        return
+      }
+
+      const cardState = cards.find(function (card) { return card.instanceId === instanceId })
+      if (!cardState) {
+        return
+      }
+
+      const cardElement = currentPlayerSection()?.querySelector(`[data-instance-id="${CSS.escape(instanceId)}"]`)
+      if (cardState.tapped === pending.tapped) {
+        pendingTapStates.delete(instanceId)
+        return
+      }
+
+      cardElement?.classList.toggle('tapped', pending.tapped)
+    })
   }
 
   function escapeHtml(value) {
@@ -140,6 +172,8 @@
         frame.innerHTML = renderPlayer(player, isCurrentPlayer(player, currentId))
       })
     }
+
+    reconcilePendingTapStates(payload)
 
     playmat.classList.remove('is-action-pending')
     playmat.removeAttribute('aria-busy')
