@@ -19,6 +19,10 @@
     return document.querySelector('.player-section[data-current-player="true"]')
   }
 
+  function isCurrentPlayer(player, currentId) {
+    return String(player.id) === String(currentId)
+  }
+
   function adjustZoneCount(zone, amount) {
     const countElement = currentPlayerSection()?.querySelector(`[data-zone-count="${zone}"]`)
     if (!countElement) {
@@ -113,7 +117,7 @@
     playmat.dataset.roomVersion = String(version)
     const currentId = payload.currentPlayerId
     const orderedPlayers = players.slice().sort(function (left, right) {
-      return left.id === currentId ? -1 : right.id === currentId ? 1 : 0
+      return isCurrentPlayer(left, currentId) ? -1 : isCurrentPlayer(right, currentId) ? 1 : 0
     })
     const playersArea = document.getElementById('players-area')
     if (playersArea) {
@@ -124,7 +128,7 @@
           return
         }
 
-        frame.innerHTML = renderPlayer(player, player.id === currentId)
+        frame.innerHTML = renderPlayer(player, isCurrentPlayer(player, currentId))
         playersArea.appendChild(frame)
       })
     }
