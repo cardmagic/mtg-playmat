@@ -77,7 +77,22 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
 
   test "reads payload sessions from an actor connection" do
     connection = Struct.new(:playmat_session_id).new("session-1")
-    assert_equal "session-1", PlaymatRoom.payload_session_id(connection)
+    context = SolidObjects.configuration.payload_authorization_context.call(connection:)
+
+    assert_equal "session-1", context.session_id
+  end
+
+  test "authorizes queries from the resolved payload context" do
+    connection = Struct.new(:playmat_session_id).new("session-1")
+    context = SolidObjects.configuration.payload_authorization_context.call(connection:)
+
+    authorized = SolidObjects.configuration.authorize_query.call(
+      actor_type: PlaymatRoom.actor_type,
+      actor_id: "ABC123",
+      authorization_context: context
+    )
+
+    assert authorized
   end
 
   test "renders the playmat through a reactive Solid Objects component" do

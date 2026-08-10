@@ -19,11 +19,18 @@ SolidObjects.configure do |configuration|
     room = registration.reference.snapshot(authorization_context: authorization).room
     authorization if authorization.player_in?(room)
   end
+  configuration.payload_authorization_context = lambda do |connection:|
+    session_id = connection.playmat_session_id if
+      connection.respond_to?(:playmat_session_id)
+    Playmat::SessionContext.new(session_id:) if session_id.present?
+  end
 
   authorization_for = lambda do |actor_id:, authorization_context:|
     next authorization_context if authorization_context.is_a?(Playmat::Authorization)
 
-    session_id = authorization_context.playmat_session_id if
+    session_id = authorization_context.session_id if
+      authorization_context.respond_to?(:session_id)
+    session_id ||= authorization_context.playmat_session_id if
       authorization_context.respond_to?(:playmat_session_id)
     next if session_id.blank?
 

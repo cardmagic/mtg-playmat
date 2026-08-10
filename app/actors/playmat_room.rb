@@ -40,14 +40,8 @@ class PlaymatRoom < SolidObjects::Actor
   broadcast_payload :playmat_state do |actor, authorization_context|
     Playmat::RoomSnapshot.new(
       actor.room,
-      session_id: PlaymatRoom.payload_session_id(authorization_context)
+      session_id: authorization_context.session_id
     ).payload
-  end
-
-  def self.payload_session_id(authorization_context)
-    return authorization_context.session_id if authorization_context.respond_to?(:session_id)
-
-    authorization_context.playmat_session_id if authorization_context.respond_to?(:playmat_session_id)
   end
 
   def create_room(code:, room_name:, player_name:, session_id:)
