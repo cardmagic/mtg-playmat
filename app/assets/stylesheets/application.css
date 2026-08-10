@@ -267,7 +267,7 @@ button:disabled,
 .left-rail {
   padding: 0.85rem;
   display: grid;
-  grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(180px, 1fr));
+  grid-template-columns: minmax(240px, 1.4fr) repeat(2, minmax(180px, 1fr));
   gap: 0.7rem;
   align-items: start;
 }
