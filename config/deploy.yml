@@ -39,6 +39,24 @@ env:
   clear:
     SOLID_QUEUE_IN_PUMA: true
     RAILS_LOG_LEVEL: info
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://mtg-playmat-jaeger:4318/v1/traces
+
+accessories:
+  jaeger:
+    image: jaegertracing/all-in-one:1.57.0
+    host: <%= ENV.fetch("KAMAL_SERVER_HOST") %>
+    port: "127.0.0.1:16686:16686"
+    options:
+      user: "0"
+    env:
+      clear:
+        COLLECTOR_OTLP_ENABLED: true
+        SPAN_STORAGE_TYPE: badger
+        BADGER_EPHEMERAL: false
+        BADGER_DIRECTORY_VALUE: /badger/data
+        BADGER_DIRECTORY_KEY: /badger/key
+    volumes:
+      - mtg-jaeger-data:/badger
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"

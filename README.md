@@ -57,6 +57,11 @@ apply, and commit spans. Keep the key in your secret manager or deployment
 environment; it is intentionally not stored in this repository. Set
 `OTEL_EXPORTER_OTLP_ENDPOINT` only when using a different OTLP collector.
 
+The production deployment also runs a private Jaeger all-in-one accessory on
+`cf-docker` with persistent Docker-backed Badger storage. To view traces,
+open an SSH tunnel with `ssh -N -L 16686:127.0.0.1:16686 cf-docker` and visit
+`http://localhost:16686`.
+
 ## Kamal deployment
 
 The public deployment configuration contains no infrastructure addresses or
