@@ -3,6 +3,9 @@ class PlaymatRoom < SolidObjects::Actor
 
   attribute :room, default: nil
 
+  # A :value observable reaches every authorized subscriber of this actor, and
+  # both seats subscribe to one stream. Only room-wide, public facts travel that
+  # way.
   observable :version do
     room&.fetch("version", 0) || 0
   end
@@ -13,28 +16,15 @@ class PlaymatRoom < SolidObjects::Actor
     end || {}
   end
 
-  observable :player_one do
+  # A seat holds a session identifier, a hand, and a library. These observables
+  # drive component refreshes without ever putting that on the wire. Each
+  # component then renders under the requesting session's own authorization.
+  observable :player_one, broadcast: :invalidation do
     player_in_seat(1)
   end
 
-  observable :player_two do
+  observable :player_two, broadcast: :invalidation do
     player_in_seat(2)
-  end
-
-  observable :player_one_controls do
-    player_controls(player_in_seat(1))
-  end
-
-  observable :player_two_controls do
-    player_controls(player_in_seat(2))
-  end
-
-  observable :player_one_library_search do
-    player_library_search(player_in_seat(1))
-  end
-
-  observable :player_two_library_search do
-    player_library_search(player_in_seat(2))
   end
 
   broadcast_payload :playmat_state do |actor, authorization_context|
@@ -114,7 +104,9 @@ class PlaymatRoom < SolidObjects::Actor
       return "invalid" unless parsed_action
 
       replacement = tracer.in_span("playmat.action.apply") { Playmat::Player.new(player).apply(parsed_action) }
-      tracer.in_span("playmat.action.commit") { commit(replace_player(replacement)) }
+      tracer.in_span("playmat.action.commit") do
+        commit(replace_player(replacement))
+      end
       span.set_attribute("playmat.action.result", "applied")
       "applied"
     end
@@ -128,29 +120,6 @@ class PlaymatRoom < SolidObjects::Actor
 
   def player_in_seat(seat)
     room&.fetch("players", [])&.find { |player| player["seat"] == seat }
-  end
-
-  def player_controls(player)
-    return unless player
-
-    {
-      "session_id" => player.fetch("session_id"),
-      "deck_name" => player.fetch("deck_name"),
-      "library_count" => player.fetch("library").length,
-      "hand_count" => player.fetch("hand").length,
-      "graveyard_count" => player.fetch("graveyard").length,
-      "exile_count" => player.fetch("exile").length
-    }
-  end
-
-  def player_library_search(player)
-    return unless player
-
-    {
-      "session_id" => player.fetch("session_id"),
-      "is_searching_deck" => player.fetch("is_searching_deck"),
-      "library" => player.fetch("library")
-    }
   end
 
   def replace_player(replacement)

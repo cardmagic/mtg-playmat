@@ -127,10 +127,55 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_equal [ 1, 2 ], player_registrations.map(&:component_key)
     assert_equal %w[player_one player_two],
       player_registrations.map { |registration| registration.locals.fetch("player_observable") }
+    assert_equal [ %w[player_one], %w[player_two] ],
+      player_registrations.map(&:dependencies)
     assert registrations.all?(&:morph?)
     assert registrations.all? { |registration| registration.batch == "playmat" }
     assert_includes session.response.body, "solid_objects/component_refresh"
     assert_includes session.response.body, "solid_objects/component_batch_refresh"
+  end
+
+  test "keeps opponent cards out of every rendered component" do
+    alice = open_session
+    bob = open_session
+    alice.post "/api/spaces", params: { playerName: "Alice" }, as: :json
+    room_code = alice.response.parsed_body.dig("space", "code")
+    bob.post "/api/spaces/#{room_code}/join", params: { playerName: "Bob" }, as: :json
+
+    load_green_machine(alice, room_code)
+    alice.post "/api/spaces/#{room_code}/actions", params: {
+      action: { type: "draw_card", count: 2 }
+    }, as: :json
+
+    alice.get "/api/spaces/#{room_code}/observer"
+    assert_includes alice.response.body, "Grizzly Bears"
+
+    bob.get "/api/spaces/#{room_code}/observer"
+    assert_response_for bob, :ok
+    assert_includes bob.response.body, "Alice"
+    refute_includes bob.response.body, "Grizzly Bears"
+    refute_includes bob.response.body, "forest-1"
+  end
+
+  test "keeps opponent cards out of every broadcast the room publishes" do
+    alice = open_session
+    bob = open_session
+    alice.post "/api/spaces", params: { playerName: "Alice" }, as: :json
+    room_code = alice.response.parsed_body.dig("space", "code")
+    bob.post "/api/spaces/#{room_code}/join", params: { playerName: "Bob" }, as: :json
+
+    load_green_machine(alice, room_code)
+    alice.post "/api/spaces/#{room_code}/actions", params: {
+      action: { type: "draw_card", count: 2 }
+    }, as: :json
+
+    published = SolidObjects::Broadcast.pluck(:value).to_json
+
+    refute_includes published, "Grizzly Bears"
+    refute_includes published, "forest-1"
+    refute_includes published, "session_id"
+    assert_equal [ {} ],
+      SolidObjects::Broadcast.where(observable_name: "player_one").pluck(:value).uniq
   end
 
   test "refreshes batched components" do
@@ -322,6 +367,36 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
 
   def component_tokens(source)
     JSON.parse(source["data-components"])
+  end
+
+  def load_green_machine(session, room_code)
+    client_class = Class.new do
+      def deck(_deck_id)
+        {
+          name: "Green Machine",
+          cards: [
+            deck_card("forest-1", "Forest"),
+            deck_card("bear-1", "Grizzly Bears"),
+            deck_card("bear-2", "Grizzly Bears")
+          ]
+        }
+      end
+
+      def deck_card(instance_id, name)
+        {
+          "instance_id" => instance_id,
+          "name" => name,
+          "scryfall_id" => instance_id,
+          "image_url" => "https://example.com/#{instance_id}.jpg",
+          "tapped" => false,
+          "is_mana_source" => false
+        }
+      end
+    end
+
+    stub_const(Archidekt, :Client, client_class) do
+      session.post "/api/spaces/#{room_code}/deck", params: { deckId: "123" }, as: :json
+    end
   end
 
   def assert_response_for(session, status)

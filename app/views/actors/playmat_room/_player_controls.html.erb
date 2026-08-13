@@ -32,11 +32,11 @@
         <h4>Loaded deck</h4>
         <p class="deck-name"><%= controls.fetch("deck_name") %></p>
         <p class="selected-deck-meta">
-          <span>Library <%= controls.fetch("library_count") %> cards</span>
+          <span>Library <%= controls.fetch("library").length %> cards</span>
           <span>
-            Hand <%= controls.fetch("hand_count") %> ·
-            Graveyard <%= controls.fetch("graveyard_count") %> ·
-            Exile <%= controls.fetch("exile_count") %>
+            Hand <%= controls.fetch("hand").length %> ·
+            Graveyard <%= controls.fetch("graveyard").length %> ·
+            Exile <%= controls.fetch("exile").length %>
           </span>
         </p>
       </div>

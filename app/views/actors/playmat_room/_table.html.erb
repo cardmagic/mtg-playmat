@@ -8,14 +8,6 @@
     1 => :player_one,
     2 => :player_two
   }
-  control_observables = {
-    1 => :player_one_controls,
-    2 => :player_two_controls
-  }
-  library_search_observables = {
-    1 => :player_one_library_search,
-    2 => :player_two_library_search
-  }
 %>
 
 <div
@@ -46,10 +38,8 @@
     <div class="board-layout">
       <%= actor.component :player_controls,
         key: current_seat,
-        observes: control_observables.fetch(current_seat),
-        locals: {
-          player_observable: control_observables.fetch(current_seat).to_s
-        },
+        observes: player_observables.fetch(current_seat),
+        locals: { player_observable: player_observables.fetch(current_seat).to_s },
         batch: :playmat,
         refresh: :morph %>
 
@@ -59,9 +49,7 @@
             <%= actor.component :player,
               key: seat,
               observes: player_observables.fetch(seat),
-              locals: {
-                player_observable: player_observables.fetch(seat).to_s
-              },
+              locals: { player_observable: player_observables.fetch(seat).to_s },
               batch: :playmat,
               refresh: :morph %>
           <% end %>
@@ -72,10 +60,8 @@
 
   <%= actor.component :library_search,
     key: current_seat,
-    observes: library_search_observables.fetch(current_seat),
-    locals: {
-      player_observable: library_search_observables.fetch(current_seat).to_s
-    },
+    observes: player_observables.fetch(current_seat),
+    locals: { player_observable: player_observables.fetch(current_seat).to_s },
     batch: :playmat,
     refresh: :morph %>
 

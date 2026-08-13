@@ -10,10 +10,23 @@ Each room code addresses one `PlaymatRoom` actor through
 serializes every mutation, and persists to SQLite. Synchronous calls need no
 worker process.
 
-The actor explicitly exposes only its version as an observable. Solid Objects
-broadcasts that version over Action Cable, and the browser fetches the
-session-filtered room snapshot. An opponent can see hand size but never card
-details. Polling remains active as a fallback.
+### Two kinds of observable
+
+A `:value` observable reaches every subscriber of the actor stream, and both
+players share one stream. Only room-wide public facts travel that way:
+`version` and `life_totals`.
+
+A seat holds a session identifier, a hand, and a library. `player_one` and
+`player_two` therefore use `broadcast: :invalidation`. They still detect changes
+and refresh the reactive components, but they persist an empty value and send
+nothing over Action Cable. Each component then renders under the requesting
+session's own authorization, so a partial shows a hand only to its owner.
+
+Card identity reaches the browser through two authorized routes: the
+`playmat_state` broadcast payload, which projects the room per connection, and
+the component refresh endpoint. A player sees their own hand and library. The
+opponent sees the same number of cards, each named "Hidden card". Polling
+remains active as a fallback.
 
 Archidekt requests happen outside the actor. Loaded deck data enters the actor
 as one ordered message.
@@ -30,7 +43,7 @@ links in this repository:
 - [`_player.html.erb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/views/actors/playmat_room/_player.html.erb)
   renders a per-player component with session-aware authorization.
 - [`playmat_room.rb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/actors/playmat_room.rb)
-  defines the actor methods and observable state that those templates consume.
+  defines the actor methods and the two kinds of observable it publishes.
 - [`solid_objects.rb`](https://github.com/cardmagic/mtg-playmat/blob/main/config/initializers/solid_objects.rb)
   shows the authorization boundary used for component refreshes.
 
