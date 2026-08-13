@@ -12,19 +12,16 @@ class Api::Spaces::ActionsController < Api::ApplicationController
 
   def handle_action(action)
     if interactive_request?
-      room_reference.async(
-        :apply_action,
+      room_reference.async(authorization_context: room_authorization).apply_action(
         action:,
-        session_id: playmat_session_id,
-        authorization_context: room_authorization
+        session_id: playmat_session_id
       )
       return head :no_content
     end
 
-    result = room_reference.apply_action(
+    result = room_reference.sync(authorization_context: room_authorization).apply_action(
       action:,
-      session_id: playmat_session_id,
-      authorization_context: room_authorization
+      session_id: playmat_session_id
     )
 
     case result

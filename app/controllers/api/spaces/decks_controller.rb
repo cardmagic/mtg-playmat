@@ -10,11 +10,10 @@ class Api::Spaces::DecksController < Api::ApplicationController
     return render json: { error: "You are not a player in this space" }, status: :forbidden unless snapshot.player?
 
     deck = Archidekt::Client.new.deck(deck_id)
-    result = room_reference.load_deck(
+    result = room_reference.sync(authorization_context: room_authorization).load_deck(
       deck_name: deck.fetch(:name),
       cards: deck.fetch(:cards),
-      session_id: playmat_session_id,
-      authorization_context: room_authorization
+      session_id: playmat_session_id
     )
     return render_room if result == "loaded"
 

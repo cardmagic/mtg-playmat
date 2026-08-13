@@ -6,12 +6,11 @@ class Api::SpacesController < Api::ApplicationController
       room_code = Playmat::RoomCode.generate
       room_reference = PlaymatRoom.ref(room_code)
       authorization = playmat_authorization(room_code)
-      result = room_reference.create_room(
+      result = room_reference.sync(authorization_context: authorization).create_room(
         code: room_code,
         room_name: params[:spaceName],
         player_name: params[:playerName],
-        session_id: playmat_session_id,
-        authorization_context: authorization
+        session_id: playmat_session_id
       )
       next if result == "exists"
 

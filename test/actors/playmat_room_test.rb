@@ -5,22 +5,19 @@ class PlaymatRoomTest < ActiveSupport::TestCase
     room = PlaymatRoom.ref("ACTOR1")
     authorization = authorization_for("ACTOR1", "session-1")
 
-    assert_equal "created", room.create_room(
+    assert_equal "created", room.sync(authorization_context: authorization).create_room(
       code: "ACTOR1",
       room_name: "Kitchen Table",
       player_name: "Alice",
-      session_id: "session-1",
-      authorization_context: authorization
+      session_id: "session-1"
     )
-    assert_equal "applied", room.apply_action(
+    assert_equal "applied", room.sync(authorization_context: authorization).apply_action(
       action: { type: "adjust_life", delta: -1 },
-      session_id: "session-1",
-      authorization_context: authorization
+      session_id: "session-1"
     )
-    assert_equal "applied", room.apply_action(
+    assert_equal "applied", room.sync(authorization_context: authorization).apply_action(
       action: { type: "adjust_life", delta: -1 },
-      session_id: "session-1",
-      authorization_context: authorization
+      session_id: "session-1"
     )
 
     snapshot = room.snapshot(authorization_context: authorization)
@@ -49,23 +46,20 @@ class PlaymatRoomTest < ActiveSupport::TestCase
     second_authorization = authorization_for("ACTOR2", "session-2")
     third_authorization = authorization_for("ACTOR2", "session-3")
 
-    room.create_room(
+    room.sync(authorization_context: first_authorization).create_room(
       code: "ACTOR2",
       room_name: "Kitchen Table",
       player_name: "Alice",
-      session_id: "session-1",
-      authorization_context: first_authorization
+      session_id: "session-1"
     )
 
-    assert_equal "joined", room.join(
+    assert_equal "joined", room.sync(authorization_context: second_authorization).join(
       player_name: "Bob",
-      session_id: "session-2",
-      authorization_context: second_authorization
+      session_id: "session-2"
     )
-    assert_equal "full", room.join(
+    assert_equal "full", room.sync(authorization_context: third_authorization).join(
       player_name: "Carol",
-      session_id: "session-3",
-      authorization_context: third_authorization
+      session_id: "session-3"
     )
   end
 

@@ -300,6 +300,24 @@ class PlaymatFlowTest < ActionDispatch::IntegrationTest
     assert_response_for first_player, :bad_request
   end
 
+  test "applies an interactive action through asynchronous dispatch" do
+    player = open_session
+    player.post "/api/spaces", params: { playerName: "Alice" }, as: :json
+    room_code = player.response.parsed_body.dig("space", "code")
+
+    player.post "/api/spaces/#{room_code}/actions", params: {
+      action: { type: "adjust_life", delta: -3 }
+    }
+
+    assert_response_for player, :no_content
+
+    assert_operator drain_solid_objects, :>, 0
+
+    player.get "/api/spaces/#{room_code}/state"
+    assert_response_for player, :ok
+    assert_equal 17, current_player(player.response.parsed_body).fetch("life")
+  end
+
   private
 
   def component_tokens(source)

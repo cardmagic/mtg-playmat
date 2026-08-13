@@ -2,10 +2,9 @@ class Api::Spaces::MembershipsController < Api::ApplicationController
   include RoomScoped
 
   def create
-    result = room_reference.join(
+    result = room_reference.sync(authorization_context: room_authorization).join(
       player_name: params[:playerName],
-      session_id: playmat_session_id,
-      authorization_context: room_authorization
+      session_id: playmat_session_id
     )
 
     case result

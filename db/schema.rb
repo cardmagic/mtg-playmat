@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_07_014246) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_13_182035) do
   create_table "solid_objects_broadcasts", force: :cascade do |t|
     t.bigint "activation_generation", null: false
     t.integer "attempt_count", default: 0, null: false
@@ -70,7 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_014246) do
     t.integer "instance_id", null: false
     t.datetime "last_failed_at", null: false
     t.integer "message_id", null: false
-    t.string "message_name", limit: 191, null: false
+    t.string "operation", limit: 191, null: false
     t.bigint "retried_message_id"
     t.datetime "updated_at", null: false
     t.index ["actor_type", "actor_id", "last_failed_at"], name: "idx_so_dead_letters_actor"
@@ -91,14 +91,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_014246) do
     t.datetime "created_at", null: false
     t.string "effect_id", limit: 36, null: false
     t.json "error"
-    t.string "failure_message_name", limit: 191
+    t.string "failure_operation", limit: 191
     t.integer "instance_id", null: false
     t.integer "max_attempts", null: false
     t.integer "message_id", null: false
     t.string "name", limit: 191, null: false
     t.json "result"
     t.string "status", limit: 32, default: "pending", null: false
-    t.string "success_message_name", limit: 191
+    t.string "success_operation", limit: 191
     t.datetime "updated_at", null: false
     t.index ["completed_at", "id"], name: "idx_so_effects_cleanup"
     t.index ["effect_id"], name: "idx_so_effects_effect_id", unique: true
@@ -145,14 +145,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_014246) do
     t.datetime "available_at", null: false
     t.datetime "completed_at"
     t.datetime "created_at", null: false
+    t.string "delivery_mode", limit: 32, null: false
     t.datetime "enqueued_at", null: false
     t.json "error"
     t.string "idempotency_key", limit: 191
     t.integer "instance_id", null: false
     t.datetime "last_failed_at"
     t.integer "max_attempts", null: false
-    t.string "message_kind", limit: 32, null: false
-    t.string "message_name", limit: 191, null: false
+    t.string "operation", limit: 191, null: false
     t.datetime "rejected_at"
     t.json "rejection"
     t.string "request_id", limit: 36, null: false
@@ -168,8 +168,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_014246) do
     t.index ["rejected_at", "id"], name: "idx_so_messages_rejected"
     t.index ["request_id"], name: "idx_so_messages_request", unique: true
     t.check_constraint "attempt_count >= 0", name: "chk_so_messages_attempt"
+    t.check_constraint "delivery_mode IN ('async', 'sync', 'internal')", name: "chk_so_messages_delivery_mode"
     t.check_constraint "max_attempts > 0", name: "chk_so_messages_max_attempts"
-    t.check_constraint "message_kind IN ('async', 'sync', 'internal')", name: "chk_so_messages_kind"
     t.check_constraint "sequence > 0", name: "chk_so_messages_sequence"
   end
 
@@ -213,11 +213,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_014246) do
     t.datetime "created_at", null: false
     t.integer "instance_id", null: false
     t.decimal "interval_seconds", precision: 20, scale: 6
-    t.string "message_name", limit: 191, null: false
     t.string "missed_policy", limit: 32, default: "latest", null: false
     t.string "name", limit: 191, null: false
     t.datetime "next_run_at", null: false
     t.bigint "occurrence", default: 0, null: false
+    t.string "operation", limit: 191, null: false
     t.string "status", limit: 32, default: "scheduled", null: false
     t.datetime "updated_at", null: false
     t.index ["instance_id", "name"], name: "idx_so_reminders_name", unique: true
