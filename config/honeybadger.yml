@@ -23,6 +23,7 @@ development_environments:
 # Enable verbose debug logging (useful for troubleshooting).
 debug: false
 
-# Enable Honeybadger Insights
+# Enable Honeybadger Insights. Without an API key every event gets a 403 and
+# fills the log, so the key decides.
 insights:
-  enabled: true
+  enabled: <%= ENV["HONEYBADGER_API_KEY"].present? %>

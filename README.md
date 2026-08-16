@@ -12,15 +12,16 @@ worker process.
 
 ### Two kinds of observable
 
-A `:value` observable reaches every subscriber of the actor stream, and both
-players share one stream. Only room-wide public facts travel that way:
-`version` and `life_totals`.
+An observable declared with `broadcast: :value` reaches every subscriber of the
+actor stream, and both players share one stream. Only room-wide public facts
+opt in that way: `version` and `life_totals`.
 
 A seat holds a session identifier, a hand, and a library. `player_one` and
-`player_two` therefore use `broadcast: :invalidation`. They still detect changes
-and refresh the reactive components, but they persist an empty value and send
-nothing over Action Cable. Each component then renders under the requesting
-session's own authorization, so a partial shows a hand only to its owner.
+`player_two` therefore stay on the default `broadcast: :invalidation`. They
+still detect changes and refresh the reactive components, but they persist an
+empty value and send nothing over Action Cable. Each component then renders
+under the requesting session's own authorization, so a partial shows a hand
+only to its owner.
 
 Card identity reaches the browser through two authorized routes: the
 `playmat_state` broadcast payload, which projects the room per connection, and
@@ -58,8 +59,15 @@ bin/setup
 bin/dev
 ```
 
-`bin/dev` starts the Rails server and the Solid Objects runtime. Production
-needs both processes from the included `Procfile`.
+`bin/dev` starts the Rails server and the Solid Objects runtime as two
+processes, so a code reload never touches a running worker thread.
+
+Production runs both in one process. `SOLID_OBJECTS_IN_PUMA` turns on the Puma
+plugin in `lib/puma/plugin/solid_objects.rb`, which starts the Solid Objects
+supervisor after Puma boots and stops it before Puma stops. One process means
+`SolidObjects.wake_up` reaches the runtime threads directly, so a message needs
+no poll to cross from a web thread to a worker. The plugin needs Puma in single
+mode, and it fails at boot when Puma is configured with workers.
 
 ## Honeybadger tracing
 

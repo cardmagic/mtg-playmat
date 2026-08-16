@@ -7,11 +7,6 @@ servers:
       - <%= ENV.fetch("KAMAL_SERVER_HOST") %>
     options:
       "add-host": host.docker.internal:host-gateway
-  worker:
-    hosts:
-      - <%= ENV.fetch("KAMAL_SERVER_HOST") %>
-    cmd: bundle exec solid_objects start
-    proxy: false
 
 proxy:
   ssl:
@@ -37,7 +32,7 @@ env:
     - RAILS_MASTER_KEY
     - HONEYBADGER_API_KEY
   clear:
-    SOLID_QUEUE_IN_PUMA: true
+    SOLID_OBJECTS_IN_PUMA: true
     RAILS_LOG_LEVEL: info
     OTEL_EXPORTER_OTLP_ENDPOINT: http://mtg-playmat-jaeger:4318/v1/traces
 

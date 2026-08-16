@@ -6,11 +6,11 @@ class PlaymatRoom < SolidObjects::Actor
   # A :value observable reaches every authorized subscriber of this actor, and
   # both seats subscribe to one stream. Only room-wide, public facts travel that
   # way.
-  observable :version do
+  observable :version, broadcast: :value do
     room&.fetch("version", 0) || 0
   end
 
-  observable :life_totals do
+  observable :life_totals, broadcast: :value do
     room&.fetch("players", [])&.to_h do |player|
       [ player.fetch("seat").to_s, player.fetch("life") ]
     end || {}
