@@ -34,8 +34,7 @@ as one ordered message.
 
 ## Reactive ERB tour
 
-The quickest way to see Solid Objects in a real Rails page is to follow these
-links in this repository:
+To see Solid Objects in a Rails page, read these files in this repository:
 
 - [`show.html.erb`](https://github.com/cardmagic/mtg-playmat/blob/main/app/views/api/spaces/observers/show.html.erb)
   mounts the room actor and its reactive state payload.
@@ -75,7 +74,7 @@ Production exports OpenTelemetry spans to Honeybadger when
 `HONEYBADGER_API_KEY` is present. The traced interaction spans are
 `draw_card`, `play_from_hand`, and `toggle_tap`, with nested actor parse,
 apply, and commit spans. Keep the key in your secret manager or deployment
-environment; it is intentionally not stored in this repository. Set
+environment. This repository does not store it. Set
 `OTEL_EXPORTER_OTLP_ENDPOINT` only when using a different OTLP collector.
 
 The production deployment also runs a private Jaeger all-in-one accessory on
