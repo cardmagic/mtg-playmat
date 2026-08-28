@@ -294,7 +294,7 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.4.2)
-    rbs (4.1.3)
+    rbs (4.2.0)
       logger
       prism (>= 1.6.0)
       tsort
@@ -356,14 +356,14 @@ GEM
       activejob (>= 7.2)
       activerecord (>= 7.2)
       railties (>= 7.2)
-    solid_objects (0.13.1)
-      actioncable (>= 8.0)
-      actionpack (>= 8.0)
-      actionview (>= 8.0)
-      activerecord (>= 8.0)
-      activesupport (>= 8.0)
+    solid_objects (0.14.1)
+      actioncable (>= 7.1)
+      actionpack (>= 7.1)
+      actionview (>= 7.1)
+      activerecord (>= 7.1)
+      activesupport (>= 7.1)
       rack (>= 3.1)
-      railties (>= 8.0)
+      railties (>= 7.1)
       thor (>= 1.3)
     sqlite3 (2.9.6-aarch64-linux-gnu)
     sqlite3 (2.9.6-aarch64-linux-musl)
@@ -441,7 +441,7 @@ DEPENDENCIES
   selenium-webdriver
   solid_cable
   solid_cache
-  solid_objects (~> 0.13.1)
+  solid_objects (~> 0.14.1)
   sqlite3 (>= 2.1)
   thruster
   turbo-rails
@@ -556,7 +556,7 @@ CHECKSUMS
   railties (8.1.3.1) sha256=2388a232579a00cefea4487de66c8553c3408c1300abdc6cf1799d86ffb04487
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
-  rbs (4.1.3) sha256=0c4474a9751cdc14364bfad0b3e53678323bbdc2c31683b0445932867dbab8c4
+  rbs (4.2.0) sha256=51f7b886dcc05bc09e10b901daa6a81829f6adc03101d6ca9ea4aac6103e0674
   rdoc (8.0.0) sha256=03bf8c08a9639658855a0cfd77c0abca8325c227693f7f33f82957811348c469
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   reline (0.7.0) sha256=5b012d8e55dbf9d450f12bde2cf7d15ff546ae80b3f8f3b30e570d431815583d
@@ -573,7 +573,7 @@ CHECKSUMS
   selenium-webdriver (4.47.0) sha256=67f915b8223d2133bbaa13e92fd98854175394f086e2036a9eff4f5561fd69e4
   solid_cable (4.0.2) sha256=084636a67679ad00d23088b33c84047e614bcf41ee559db24b414d83cdc42d03
   solid_cache (1.0.10) sha256=bc05a2fb3ac78a6f43cbb5946679cf9db67dd30d22939ededc385cb93e120d41
-  solid_objects (0.13.1) sha256=1825687e1cc22fae92514e026f36ebb53ae3c6779aec3e646bab4d8e56e8bced
+  solid_objects (0.14.1) sha256=950820d272c01732232daec797a6ede011905e2efa380a53a3eff2b7d5843df8
   sqlite3 (2.9.6-aarch64-linux-gnu) sha256=d8b1f7d23efd7abac285775a9566562fc7debfef79d594e3a20354406fb7907c
   sqlite3 (2.9.6-aarch64-linux-musl) sha256=3579e1c98cdc7ff5c3722847bb63ed4e1efb7ff675cb5e1e48ef2d4da5fb3bc9
   sqlite3 (2.9.6-arm-linux-gnu) sha256=33541500e3615da02afe54a9cc38b17a6985d3cf9d8b76d6d0a83002f114e7ec
