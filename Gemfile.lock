@@ -356,7 +356,7 @@ GEM
       activejob (>= 7.2)
       activerecord (>= 7.2)
       railties (>= 7.2)
-    solid_objects (0.14.1)
+    solid_objects (0.14.2)
       actioncable (>= 7.1)
       actionpack (>= 7.1)
       actionview (>= 7.1)
@@ -441,7 +441,7 @@ DEPENDENCIES
   selenium-webdriver
   solid_cable
   solid_cache
-  solid_objects (~> 0.14.1)
+  solid_objects (~> 0.14.2)
   sqlite3 (>= 2.1)
   thruster
   turbo-rails
@@ -573,7 +573,7 @@ CHECKSUMS
   selenium-webdriver (4.47.0) sha256=67f915b8223d2133bbaa13e92fd98854175394f086e2036a9eff4f5561fd69e4
   solid_cable (4.0.2) sha256=084636a67679ad00d23088b33c84047e614bcf41ee559db24b414d83cdc42d03
   solid_cache (1.0.10) sha256=bc05a2fb3ac78a6f43cbb5946679cf9db67dd30d22939ededc385cb93e120d41
-  solid_objects (0.14.1) sha256=950820d272c01732232daec797a6ede011905e2efa380a53a3eff2b7d5843df8
+  solid_objects (0.14.2) sha256=f4fd4b5e63759c20f65d50728ac9104aa2004d7f15877645df33ffbc6e5b7209
   sqlite3 (2.9.6-aarch64-linux-gnu) sha256=d8b1f7d23efd7abac285775a9566562fc7debfef79d594e3a20354406fb7907c
   sqlite3 (2.9.6-aarch64-linux-musl) sha256=3579e1c98cdc7ff5c3722847bb63ed4e1efb7ff675cb5e1e48ef2d4da5fb3bc9
   sqlite3 (2.9.6-arm-linux-gnu) sha256=33541500e3615da02afe54a9cc38b17a6985d3cf9d8b76d6d0a83002f114e7ec
